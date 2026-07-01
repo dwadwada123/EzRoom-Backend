@@ -34,3 +34,22 @@ pnpm-debug.log*
 # OS files
 .DS_Store
 Thumbs.db
+
+# IDE/Editor configurations
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Testing coverage
+coverage/
+.nyc_output
+
+# Agent and local temp folders
+.superpowers/
+.temp/
+.tmp/
+
