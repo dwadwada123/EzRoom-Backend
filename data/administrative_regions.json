@@ -1,0 +1,66 @@
+[
+  {
+    "_id": "6a44dcbe3da3a10350b98af9",
+    "Id": 1,
+    "Name": "Đông Bắc Bộ",
+    "NameEn": "Northeast",
+    "CodeName": "dong_bac_bo",
+    "CodeNameEn": "northest"
+  },
+  {
+    "_id": "6a44dcbe3da3a10350b98afa",
+    "Id": 2,
+    "Name": "Tây Bắc Bộ",
+    "NameEn": "Northwest",
+    "CodeName": "tay_bac_bo",
+    "CodeNameEn": "northwest"
+  },
+  {
+    "_id": "6a44dcbe3da3a10350b98afb",
+    "Id": 3,
+    "Name": "Đồng bằng sông Hồng",
+    "NameEn": "Red River Delta",
+    "CodeName": "dong_bang_song_hong",
+    "CodeNameEn": "red_river_delta"
+  },
+  {
+    "_id": "6a44dcbe3da3a10350b98afc",
+    "Id": 4,
+    "Name": "Bắc Trung Bộ",
+    "NameEn": "North Central Coast",
+    "CodeName": "bac_trung_bo",
+    "CodeNameEn": "north_central_coast"
+  },
+  {
+    "_id": "6a44dcbe3da3a10350b98afd",
+    "Id": 5,
+    "Name": "Duyên hải Nam Trung Bộ",
+    "NameEn": "South Central Coast",
+    "CodeName": "duyen_hai_nam_trung_bo",
+    "CodeNameEn": "south_central_coast"
+  },
+  {
+    "_id": "6a44dcbe3da3a10350b98afe",
+    "Id": 6,
+    "Name": "Tây Nguyên",
+    "NameEn": "Central Highlands",
+    "CodeName": "tay_nguyen",
+    "CodeNameEn": "central_highlands"
+  },
+  {
+    "_id": "6a44dcbe3da3a10350b98aff",
+    "Id": 7,
+    "Name": "Đông Nam Bộ",
+    "NameEn": "Southeast",
+    "CodeName": "dong_nam_bo",
+    "CodeNameEn": "southeast"
+  },
+  {
+    "_id": "6a44dcbe3da3a10350b98b00",
+    "Id": 8,
+    "Name": "Đồng bằng sông Cửu Long",
+    "NameEn": "Mekong River Delta",
+    "CodeName": "dong_bang_song_cuu_long",
+    "CodeNameEn": "southwest"
+  }
+]

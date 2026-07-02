@@ -89,5 +89,24 @@ Khi thực hiện kiểm thử trên thiết bị Android, hãy cấu hình Base
    - Tìm IP nội bộ của máy tính (Ví dụ: 192.168.2.12).
    - URL: `http://<IP-máy-tính>:3000/`
 
-## Lưu ý về Bảo mật và Git
-Thư mục `.agents/` (lưu trữ agent skills), `.superpowers/` (nháp của AI) và `docs/` đã được thiết lập bỏ qua trong `.gitignore` để không bị tải lên GitHub.
+## Hướng dẫn thiết lập Cơ sở dữ liệu (MongoDB)
+
+Dự án này đã đính kèm sẵn dữ liệu mẫu dạng JSON của 34 tỉnh thành Việt Nam trong thư mục `data/`. Để import dữ liệu này vào MongoDB chạy local của bạn, hãy làm theo các bước sau:
+
+1. Đảm bảo dịch vụ MongoDB đã được khởi chạy trên máy của bạn (mặc định tại cổng 27017).
+
+2. Mở Terminal hoặc Command Prompt tại thư mục gốc của dự án này và chạy các lệnh `mongoimport` sau:
+
+   ```bash
+   mongoimport --db vietnam_provinces --collection administrative_units --file data/administrative_units.json --jsonArray --drop
+   mongoimport --db vietnam_provinces --collection provinces --file data/provinces.json --jsonArray --drop
+   mongoimport --db vietnam_provinces --collection administrative_regions --file data/administrative_regions.json --jsonArray --drop
+   ```
+
+   *Giải thích các tham số:*
+   - `--db`: Tên database cần tạo/sử dụng (`vietnam_provinces`).
+   - `--collection`: Tên collection cần import dữ liệu.
+   - `--file`: Đường dẫn tới file JSON dữ liệu nguồn.
+   - `--jsonArray`: Chỉ định định dạng file nguồn là một mảng JSON.
+   - `--drop`: Xóa dữ liệu cũ của collection đó trước khi ghi đè dữ liệu mới để tránh bị trùng lặp.
+
