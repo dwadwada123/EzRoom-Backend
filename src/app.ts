@@ -1,8 +1,10 @@
 import express from 'express';
 import { connectDb } from './config/db';
+import mediaRouter from './routes/media';
 
 const app = express();
 app.use(express.json());
+app.use('/api/media', mediaRouter);
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
