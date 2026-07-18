@@ -4,6 +4,8 @@ import mediaRouter from './routes/media';
 import authRouter from './routes/auth';
 import propertyRouter from './routes/property';
 import roomRouter from './routes/room';
+import contractRouter from './routes/contract';
+import webhookRouter from './routes/webhook';
 
 const app = express();
 app.use(express.json());
@@ -11,6 +13,8 @@ app.use('/api/media', mediaRouter);
 app.use('/api', authRouter);
 app.use('/api', propertyRouter);
 app.use('/api', roomRouter);
+app.use('/api', contractRouter);
+app.use('/api', webhookRouter);
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });

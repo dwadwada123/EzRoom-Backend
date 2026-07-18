@@ -1,0 +1,53 @@
+import { Request, Response } from 'express';
+import { Contract } from '../models/contract';
+
+export async function createContract(req: Request, res: Response) {
+  try {
+    const { id, roomId, renterId, renterName, renterPhone, hostName, startDate, endDate, depositAmount, isProtected } = req.body;
+    if (!id || !roomId || !renterId || !renterName || !renterPhone || !hostName || !startDate || !endDate || depositAmount === undefined) {
+      return res.status(400).json({ success: false, error: 'Missing contract required parameters.' });
+    }
+    const contract = new Contract({
+      _id: id, roomId, renterId, renterName, renterPhone, hostName, startDate, endDate, depositAmount,
+      depositStatus: 'UNPAID', status: 'DRAFT', dateCreated: new Date().toLocaleDateString('vi-VN'), isProtected
+    });
+    await contract.save();
+    return res.status(201).json({ success: true, contract });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+}
+
+export async function signContract(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+    const contract = await Contract.findById(id);
+    if (!contract) {
+      return res.status(404).json({ success: false, error: 'Contract not found.' });
+    }
+
+    contract.status = 'WAITING_DEPOSIT';
+    contract.dateSigned = new Date().toLocaleDateString('vi-VN');
+    await contract.save();
+
+    return res.status(200).json({ success: true, contract });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+}
+
+export async function getPaymentQR(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+    const contract = await Contract.findById(id);
+    if (!contract) {
+      return res.status(404).json({ success: false, error: 'Contract not found.' });
+    }
+
+    // Generate simulated VietQR code
+    const mockQRUrl = `https://img.vietqr.io/image/MB-123456789-compact.png?amount=${contract.depositAmount}&addInfo=EzRoom_Deposit_${contract.id}`;
+    return res.status(200).json({ success: true, qrUrl: mockQRUrl, depositAmount: contract.depositAmount });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+}
