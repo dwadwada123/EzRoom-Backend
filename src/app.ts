@@ -1,0 +1,48 @@
+import express from 'express';
+import { connectDb } from './config/db';
+
+const app = express();
+app.use(express.json());
+
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
+app.get('/api/provinces', async (req, res) => {
+  try {
+    const db = await connectDb();
+    if (!db) {
+      return res.status(500).json({ success: false, error: 'Database connection failed.' });
+    }
+    const rawProvinces = await db.collection('provinces').find({}).toArray();
+    const mapped = rawProvinces.map((prov: any) => ({
+      code: prov.Code,
+      name: prov.Name,
+      fullName: prov.FullName,
+      codeName: prov.CodeName,
+      type: prov.Type,
+      administrativeUnitId: prov.AdministrativeUnitId,
+      wards: (prov.Wards || []).map((ward: any) => ({
+        code: ward.Code,
+        name: ward.Name,
+        fullName: ward.FullName,
+        codeName: ward.CodeName,
+        type: ward.Type,
+        administrativeUnitId: ward.AdministrativeUnitId
+      }))
+    }));
+    res.status(200).json(mapped);
+  } catch (error) {
+    console.error('API Error:', error);
+    res.status(500).json({ success: false, error: 'Database connection failed.' });
+  }
+});
+
+if (require.main === module) {
+  const port = Number(process.env.PORT) || 3000;
+  app.listen(port, '0.0.0.0', () => {
+    console.log(`Server is running on port ${port}`);
+  });
+}
+
+export default app;
