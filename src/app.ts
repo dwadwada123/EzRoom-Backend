@@ -1,11 +1,14 @@
 import express from 'express';
 import { connectDb } from './config/db';
+import cron from 'node-cron';
 import mediaRouter from './routes/media';
 import authRouter from './routes/auth';
 import propertyRouter from './routes/property';
 import roomRouter from './routes/room';
 import contractRouter from './routes/contract';
 import webhookRouter from './routes/webhook';
+import adminRouter from './routes/admin';
+import { processEscrowDisbursals } from './tasks/escrow';
 
 const app = express();
 app.use(express.json());
@@ -15,6 +18,14 @@ app.use('/api', propertyRouter);
 app.use('/api', roomRouter);
 app.use('/api', contractRouter);
 app.use('/api', webhookRouter);
+app.use('/api', adminRouter);
+
+// Daily schedule at 00:00 (disabled in test environment)
+if (process.env.NODE_ENV !== 'test') {
+  cron.schedule('0 0 * * *', async () => {
+    await processEscrowDisbursals();
+  });
+}
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
