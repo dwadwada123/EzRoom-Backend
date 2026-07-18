@@ -1,10 +1,12 @@
 import express from 'express';
 import { connectDb } from './config/db';
 import mediaRouter from './routes/media';
+import authRouter from './routes/auth';
 
 const app = express();
 app.use(express.json());
 app.use('/api/media', mediaRouter);
+app.use('/api', authRouter);
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
