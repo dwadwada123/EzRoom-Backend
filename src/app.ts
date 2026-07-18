@@ -2,11 +2,15 @@ import express from 'express';
 import { connectDb } from './config/db';
 import mediaRouter from './routes/media';
 import authRouter from './routes/auth';
+import propertyRouter from './routes/property';
+import roomRouter from './routes/room';
 
 const app = express();
 app.use(express.json());
 app.use('/api/media', mediaRouter);
 app.use('/api', authRouter);
+app.use('/api', propertyRouter);
+app.use('/api', roomRouter);
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
