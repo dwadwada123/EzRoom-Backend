@@ -4,6 +4,8 @@ import app from '../src/app';
 import { Contract } from '../src/models/contract';
 import { connectDb, closeDb } from '../src/config/db';
 
+import { payOS } from '../src/config/payos';
+
 const JWT_SECRET = process.env.JWT_SECRET || 'ezroom_secret_key_123';
 
 describe('Contracts & Webhook APIs', () => {
@@ -26,6 +28,16 @@ describe('Contracts & Webhook APIs', () => {
     await connectDb();
     await Contract.deleteMany({});
     token = jwt.sign({ id: 'user_1', email: 'renter@ezroom.vn', role: 'RENTER' }, JWT_SECRET);
+    
+    // Mock PayOS createPaymentLink
+    jest.spyOn(payOS, 'createPaymentLink').mockImplementation(async (data: any) => {
+      return {
+        checkoutUrl: `https://checkout.payos.vn/web/${data.orderCode}`,
+        paymentLinkId: 'mock_pay_link_id',
+        status: 'PENDING',
+        qrCode: 'mock_qr_code'
+      } as any;
+    });
   });
 
   afterAll(async () => {
@@ -57,7 +69,7 @@ describe('Contracts & Webhook APIs', () => {
       .post(`/api/contracts/${mockContract.id}/payment`)
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
-    expect(qrRes.body.qrUrl).toContain('vietqr.io');
+    expect(qrRes.body.qrUrl).toContain('payos.vn');
   });
 
   it('should handle webhook to freeze deposit (Escrow)', async () => {

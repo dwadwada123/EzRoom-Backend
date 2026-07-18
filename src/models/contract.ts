@@ -24,6 +24,7 @@ export interface IContract {
   } | null;
   disburseDate?: string | null;
   isProtected: boolean;
+  orderCode?: number | null;
 }
 
 const ContractSchema = new Schema<IContract>({
@@ -49,7 +50,8 @@ const ContractSchema = new Schema<IContract>({
     status: { type: String, enum: ['PENDING', 'COMPLETED'], default: 'PENDING' }
   },
   disburseDate: { type: String, default: null },
-  isProtected: { type: Boolean, default: false }
+  isProtected: { type: Boolean, default: false },
+  orderCode: { type: Number, default: null }
 });
 
 export const Contract = mongoose.model<IContract>('Contract', ContractSchema);
