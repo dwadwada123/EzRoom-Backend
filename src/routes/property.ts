@@ -1,8 +1,11 @@
 import { Router } from 'express';
 import { createProperty, getProperties } from '../controllers/property';
+import { authMiddleware } from '../middlewares/auth';
 
 const router = Router();
-router.post('/properties', createProperty);
-router.get('/properties', getProperties);
+router.use(authMiddleware);
+
+router.post('/', createProperty);
+router.get('/', getProperties);
 
 export default router;

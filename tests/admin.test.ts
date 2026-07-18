@@ -1,19 +1,25 @@
 import request from 'supertest';
+import jwt from 'jsonwebtoken';
 import app from '../src/app';
 import { Contract } from '../src/models/contract';
 import { connectDb, closeDb } from '../src/config/db';
 
-beforeAll(async () => {
-  await connectDb();
-  await Contract.deleteMany({});
-});
-
-afterAll(async () => {
-  await Contract.deleteMany({});
-  await closeDb();
-});
+const JWT_SECRET = process.env.JWT_SECRET || 'ezroom_secret_key_123';
 
 describe('Admin panel & Cron task APIs', () => {
+  let adminToken = '';
+
+  beforeAll(async () => {
+    await connectDb();
+    await Contract.deleteMany({});
+    adminToken = jwt.sign({ id: 'admin_1', email: 'admin@ezroom.vn', role: 'ADMIN' }, JWT_SECRET);
+  });
+
+  afterAll(async () => {
+    await Contract.deleteMany({});
+    await closeDb();
+  });
+
   it('should process frozen escrow payouts on startDate', async () => {
     // 1. Create a contract scheduled to start today (starts right now)
     const todayStr = new Date().toLocaleDateString('vi-VN');
@@ -36,6 +42,7 @@ describe('Admin panel & Cron task APIs', () => {
     // 2. Trigger task manually
     const res = await request(app)
       .post('/api/admin/tasks/run-escrow')
+      .set('Authorization', `Bearer ${adminToken}`)
       .expect(200);
 
     expect(res.body.processed).toBe(1);
@@ -65,6 +72,7 @@ describe('Admin panel & Cron task APIs', () => {
 
     const res = await request(app)
       .post(`/api/admin/disputes/${contract.id}/resolve`)
+      .set('Authorization', `Bearer ${adminToken}`)
       .send({ status: 'APPROVED', resolutionNote: 'Host violated rental terms.' })
       .expect(200);
 
@@ -94,6 +102,7 @@ describe('Admin panel & Cron task APIs', () => {
 
     const res = await request(app)
       .post(`/api/admin/disputes/${contract.id}/resolve`)
+      .set('Authorization', `Bearer ${adminToken}`)
       .send({ status: 'REJECTED', resolutionNote: 'Complaints are not valid.' })
       .expect(200);
 

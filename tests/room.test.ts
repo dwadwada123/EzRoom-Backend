@@ -1,20 +1,11 @@
 import request from 'supertest';
+import jwt from 'jsonwebtoken';
 import app from '../src/app';
 import { Property } from '../src/models/property';
 import { Room } from '../src/models/room';
 import { connectDb, closeDb } from '../src/config/db';
 
-beforeAll(async () => {
-  await connectDb();
-  await Property.deleteMany({});
-  await Room.deleteMany({});
-});
-
-afterAll(async () => {
-  await Property.deleteMany({});
-  await Room.deleteMany({});
-  await closeDb();
-});
+const JWT_SECRET = process.env.JWT_SECRET || 'ezroom_secret_key_123';
 
 describe('Properties & Rooms APIs', () => {
   const mockProp = {
@@ -42,9 +33,25 @@ describe('Properties & Rooms APIs', () => {
     longitude: 106.660172
   };
 
+  let hostToken = '';
+
+  beforeAll(async () => {
+    await connectDb();
+    await Property.deleteMany({});
+    await Room.deleteMany({});
+    hostToken = jwt.sign({ id: 'user_1', email: 'host@ezroom.vn', role: 'HOST' }, JWT_SECRET);
+  });
+
+  afterAll(async () => {
+    await Property.deleteMany({});
+    await Room.deleteMany({});
+    await closeDb();
+  });
+
   it('should create and retrieve properties', async () => {
     const createRes = await request(app)
       .post('/api/properties')
+      .set('Authorization', `Bearer ${hostToken}`)
       .send(mockProp)
       .expect(201);
     expect(createRes.body.success).toBe(true);
@@ -52,6 +59,7 @@ describe('Properties & Rooms APIs', () => {
 
     const getRes = await request(app)
       .get('/api/properties')
+      .set('Authorization', `Bearer ${hostToken}`)
       .expect(200);
     expect(getRes.body.length).toBeGreaterThan(0);
     expect(getRes.body[0].id).toBe(mockProp.id);
@@ -60,11 +68,13 @@ describe('Properties & Rooms APIs', () => {
   it('should create and retrieve rooms for discovery', async () => {
     const createRes = await request(app)
       .post('/api/rooms')
+      .set('Authorization', `Bearer ${hostToken}`)
       .send(mockRoom)
       .expect(201);
     expect(createRes.body.success).toBe(true);
     expect(createRes.body.room.id).toBe(mockRoom.id);
 
+    // Discovery GET is public, no token required
     const getRes = await request(app)
       .get('/api/rooms')
       .expect(200);

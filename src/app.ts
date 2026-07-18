@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import { connectDb } from './config/db';
 import cron from 'node-cron';
 import mediaRouter from './routes/media';
@@ -12,15 +13,16 @@ import invoiceRouter from './routes/invoice';
 import { processEscrowDisbursals } from './tasks/escrow';
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 app.use('/api/media', mediaRouter);
 app.use('/api', authRouter);
-app.use('/api', propertyRouter);
-app.use('/api', roomRouter);
-app.use('/api', contractRouter);
+app.use('/api/properties', propertyRouter);
+app.use('/api/rooms', roomRouter);
+app.use('/api/contracts', contractRouter);
 app.use('/api', webhookRouter);
-app.use('/api', adminRouter);
-app.use('/api', invoiceRouter);
+app.use('/api/admin', adminRouter);
+app.use('/api/invoices', invoiceRouter);
 
 // Daily schedule at 00:00 (disabled in test environment)
 if (process.env.NODE_ENV !== 'test') {

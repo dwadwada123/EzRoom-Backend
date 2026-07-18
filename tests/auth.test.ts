@@ -22,6 +22,8 @@ describe('Auth APIs', () => {
     role: 'RENTER'
   };
 
+  let token = '';
+
   it('should register a new user successfully', async () => {
     const res = await request(app)
       .post('/api/auth/register')
@@ -41,12 +43,14 @@ describe('Auth APIs', () => {
 
     expect(res.body.success).toBe(true);
     expect(res.body.token).toBeDefined();
+    token = res.body.token;
     expect(res.body.user.email).toBe(mockUser.email);
   });
 
   it('should submit eKYC details and await moderation', async () => {
     const res = await request(app)
       .post('/api/profile/ekyc')
+      .set('Authorization', `Bearer ${token}`)
       .send({
         userId: mockUser.id,
         idCardNumber: '123456789012',

@@ -1,8 +1,13 @@
 import { Router } from 'express';
 import { createRoom, getRooms } from '../controllers/room';
+import { authMiddleware, roleMiddleware } from '../middlewares/auth';
 
 const router = Router();
-router.post('/rooms', createRoom);
-router.get('/rooms', getRooms);
+
+// Public discovery
+router.get('/', getRooms);
+
+// Host only
+router.post('/', authMiddleware, roleMiddleware(['HOST']), createRoom);
 
 export default router;

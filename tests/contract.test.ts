@@ -1,17 +1,10 @@
 import request from 'supertest';
+import jwt from 'jsonwebtoken';
 import app from '../src/app';
 import { Contract } from '../src/models/contract';
 import { connectDb, closeDb } from '../src/config/db';
 
-beforeAll(async () => {
-  await connectDb();
-  await Contract.deleteMany({});
-});
-
-afterAll(async () => {
-  await Contract.deleteMany({});
-  await closeDb();
-});
+const JWT_SECRET = process.env.JWT_SECRET || 'ezroom_secret_key_123';
 
 describe('Contracts & Webhook APIs', () => {
   const mockContract = {
@@ -27,10 +20,24 @@ describe('Contracts & Webhook APIs', () => {
     isProtected: true
   };
 
+  let token = '';
+
+  beforeAll(async () => {
+    await connectDb();
+    await Contract.deleteMany({});
+    token = jwt.sign({ id: 'user_1', email: 'renter@ezroom.vn', role: 'RENTER' }, JWT_SECRET);
+  });
+
+  afterAll(async () => {
+    await Contract.deleteMany({});
+    await closeDb();
+  });
+
   it('should draft a contract and sign it', async () => {
     // 1. Draft Contract
     const draftRes = await request(app)
       .post('/api/contracts')
+      .set('Authorization', `Bearer ${token}`)
       .send(mockContract)
       .expect(201);
     expect(draftRes.body.success).toBe(true);
@@ -40,6 +47,7 @@ describe('Contracts & Webhook APIs', () => {
     // 2. Sign Contract
     const signRes = await request(app)
       .post(`/api/contracts/${mockContract.id}/sign`)
+      .set('Authorization', `Bearer ${token}`)
       .expect(200);
     expect(signRes.body.contract.status).toBe('WAITING_DEPOSIT');
     expect(signRes.body.contract.dateSigned).toBeDefined();
@@ -47,11 +55,13 @@ describe('Contracts & Webhook APIs', () => {
     // 3. Get Payment QR
     const qrRes = await request(app)
       .post(`/api/contracts/${mockContract.id}/payment`)
+      .set('Authorization', `Bearer ${token}`)
       .expect(200);
     expect(qrRes.body.qrUrl).toContain('vietqr.io');
   });
 
   it('should handle webhook to freeze deposit (Escrow)', async () => {
+    // Webhook is public (no Auth header needed)
     const res = await request(app)
       .post('/api/payment-webhook')
       .send({

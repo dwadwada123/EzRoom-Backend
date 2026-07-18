@@ -1,17 +1,10 @@
 import request from 'supertest';
+import jwt from 'jsonwebtoken';
 import app from '../src/app';
 import { Invoice } from '../src/models/invoice';
 import { connectDb, closeDb } from '../src/config/db';
 
-beforeAll(async () => {
-  await connectDb();
-  await Invoice.deleteMany({});
-});
-
-afterAll(async () => {
-  await Invoice.deleteMany({});
-  await closeDb();
-});
+const JWT_SECRET = process.env.JWT_SECRET || 'ezroom_secret_key_123';
 
 describe('Invoices APIs', () => {
   const mockInvoice = {
@@ -27,10 +20,24 @@ describe('Invoices APIs', () => {
     otherCosts: [{ reason: 'Rác + Internet', amount: 150000 }] // Total: 4,000,000 + 175,000 + 30,000 + 150,000 = 4,355,000
   };
 
+  let token = '';
+
+  beforeAll(async () => {
+    await connectDb();
+    await Invoice.deleteMany({});
+    token = jwt.sign({ id: 'user_1', email: 'renter@ezroom.vn', role: 'RENTER' }, JWT_SECRET);
+  });
+
+  afterAll(async () => {
+    await Invoice.deleteMany({});
+    await closeDb();
+  });
+
   it('should create an invoice and perform payment with 5% commission deduction', async () => {
     // 1. Create Invoice
     const createRes = await request(app)
       .post('/api/invoices')
+      .set('Authorization', `Bearer ${token}`)
       .send(mockInvoice)
       .expect(201);
     expect(createRes.body.success).toBe(true);
@@ -38,6 +45,7 @@ describe('Invoices APIs', () => {
     // 2. Pay Invoice
     const payRes = await request(app)
       .patch(`/api/invoices/${mockInvoice.id}/pay`)
+      .set('Authorization', `Bearer ${token}`)
       .send({ paymentMethod: 'VietQR' })
       .expect(200);
 
