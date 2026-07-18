@@ -3,7 +3,6 @@ import jwt from 'jsonwebtoken';
 import app from '../src/app';
 import { Contract } from '../src/models/contract';
 import { connectDb, closeDb } from '../src/config/db';
-
 import { payOS } from '../src/config/payos';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'ezroom_secret_key_123';
@@ -29,13 +28,22 @@ describe('Contracts & Webhook APIs', () => {
     await Contract.deleteMany({});
     token = jwt.sign({ id: 'user_1', email: 'renter@ezroom.vn', role: 'RENTER' }, JWT_SECRET);
     
-    // Mock PayOS createPaymentLink
-    jest.spyOn(payOS, 'createPaymentLink').mockImplementation(async (data: any) => {
+    // Mock PayOS paymentRequests.create
+    jest.spyOn(payOS.paymentRequests, 'create').mockImplementation(async (data: any) => {
       return {
         checkoutUrl: `https://checkout.payos.vn/web/${data.orderCode}`,
         paymentLinkId: 'mock_pay_link_id',
         status: 'PENDING',
         qrCode: 'mock_qr_code'
+      } as any;
+    });
+
+    // Mock PayOS webhooks.verify
+    jest.spyOn(payOS.webhooks, 'verify').mockImplementation(async (body: any) => {
+      return {
+        orderCode: body.orderCode,
+        amount: body.amount,
+        desc: body.desc || 'success'
       } as any;
     });
   });
@@ -73,13 +81,17 @@ describe('Contracts & Webhook APIs', () => {
   });
 
   it('should handle webhook to freeze deposit (Escrow)', async () => {
+    // 1. Query the contract from DB to get the runtime orderCode set by getPaymentQR
+    const contract = await Contract.findById(mockContract.id);
+    const orderCode = contract?.orderCode || 0;
+
     // Webhook is public (no Auth header needed)
     const res = await request(app)
       .post('/api/payment-webhook')
       .send({
-        contractId: mockContract.id,
+        orderCode,
         amount: mockContract.depositAmount,
-        status: 'SUCCESS'
+        desc: 'success'
       })
       .expect(200);
 

@@ -1,33 +1,34 @@
 import { Request, Response } from 'express';
 import { Contract } from '../models/contract';
+import { payOS } from '../config/payos';
 
 export async function paymentWebhook(req: Request, res: Response) {
   try {
-    const { contractId, amount, status } = req.body;
-    if (!contractId || amount === undefined || !status) {
-      return res.status(400).json({ success: false, error: 'Missing webhook data' });
+    const webhookBody = req.body;
+
+    // 1. Verify webhook signature and extract raw verified data
+    const verifiedData = await payOS.webhooks.verify(webhookBody);
+
+    if (verifiedData.desc !== 'success') {
+      return res.status(200).json({ success: true, message: 'Non-success transaction ignored.' });
     }
 
-    if (status !== 'SUCCESS') {
-      return res.status(200).json({ success: true, message: 'Non-success payment status ignored.' });
-    }
+    const orderCode = verifiedData.orderCode;
 
-    const contract = await Contract.findById(contractId);
+    // 2. Find contract matching the orderCode
+    const contract = await Contract.findOne({ orderCode });
     if (!contract) {
-      return res.status(404).json({ success: false, error: 'Contract not found.' });
+      return res.status(404).json({ success: false, error: 'Contract matching orderCode not found.' });
     }
 
-    if (amount < contract.depositAmount) {
-      return res.status(400).json({ success: false, error: 'Insufficient deposit amount paid.' });
-    }
-
-    // Freeze the deposit in escrow and activate contract
+    // 3. Freeze deposit in escrow and activate contract
     contract.depositStatus = 'FROZEN';
     contract.status = 'ACTIVE';
     await contract.save();
 
-    return res.status(200).json({ success: true, message: 'Deposit frozen successfully in Escrow.', contract });
+    return res.status(200).json({ success: true, message: 'Deposit frozen in Escrow.', contract });
   } catch (error: any) {
-    return res.status(500).json({ success: false, error: error.message });
+    console.error('Webhook error:', error.message);
+    return res.status(400).json({ success: false, error: 'Webhook signature verification failed.' });
   }
 }
