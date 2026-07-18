@@ -8,6 +8,7 @@ import roomRouter from './routes/room';
 import contractRouter from './routes/contract';
 import webhookRouter from './routes/webhook';
 import adminRouter from './routes/admin';
+import invoiceRouter from './routes/invoice';
 import { processEscrowDisbursals } from './tasks/escrow';
 
 const app = express();
@@ -19,6 +20,7 @@ app.use('/api', roomRouter);
 app.use('/api', contractRouter);
 app.use('/api', webhookRouter);
 app.use('/api', adminRouter);
+app.use('/api', invoiceRouter);
 
 // Daily schedule at 00:00 (disabled in test environment)
 if (process.env.NODE_ENV !== 'test') {
