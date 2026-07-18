@@ -56,7 +56,7 @@ export async function getPaymentQR(req: Request, res: Response) {
       returnUrl: `https://ezroom.vn/payment/success`
     };
 
-    const paymentLinkRes = await payOS.createPaymentLink(paymentData);
+    const paymentLinkRes = await payOS.paymentRequests.create(paymentData);
 
     contract.orderCode = orderCode;
     await contract.save();
