@@ -7,7 +7,13 @@ import {
   moderateEkyc,
   getRoomsModeration,
   moderateRoom,
-  triggerEscrowTask
+  triggerEscrowTask,
+  getDashboardStats,
+  getAdminUsers,
+  toggleUserStatus,
+  getAdminInvoices,
+  getAdminReviewReports,
+  resolveReviewReport
 } from '../controllers/admin';
 import { authMiddleware, roleMiddleware } from '../middlewares/auth';
 
@@ -23,5 +29,12 @@ router.post('/ekyc/:id/moderate', moderateEkyc);
 router.get('/rooms/moderation', getRoomsModeration);
 router.post('/rooms/:id/moderate', moderateRoom);
 router.post('/tasks/run-escrow', triggerEscrowTask);
+
+router.get('/dashboard-stats', getDashboardStats);
+router.get('/users', getAdminUsers);
+router.post('/users/:id/status', toggleUserStatus);
+router.get('/invoices', getAdminInvoices);
+router.get('/reports', getAdminReviewReports);
+router.post('/reports/:id/resolve', resolveReviewReport);
 
 export default router;

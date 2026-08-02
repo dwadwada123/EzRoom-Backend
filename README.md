@@ -1,145 +1,120 @@
 # EzRoom Backend API
 
-Đây là phần backend cho ứng dụng quản lý phòng trọ EzRoom, được viết bằng Node.js, sử dụng framework Express.js và cơ sở dữ liệu MongoDB.
+Hệ thống Backend API cho nền tảng quản lý và cho thuê phòng trọ EzRoom, được xây dựng trên nền tảng Node.js, Express, TypeScript và cơ sở dữ liệu MongoDB.
 
-Backend này cung cấp API lấy dữ liệu địa giới hành chính 34 tỉnh thành của Việt Nam theo mô hình hành chính 2 cấp mới (Tỉnh/Thành phố và Phường/Xã).
+## 1. Công nghệ sử dụng
 
-## Công nghệ sử dụng
+- Node.js (phiên bản 18.x hoặc mới hơn)
+- TypeScript & ts-node
+- Express.js (RESTful API Framework)
+- MongoDB & Mongoose (Cơ sở dữ liệu NoSQL và ODM)
+- PayOS SDK (Cổng thanh toán trực tuyến và chi hộ Payout)
+- Cloudinary SDK (Lưu trữ và tối ưu hóa hình ảnh đám mây)
+- Nodemailer (Dịch vụ gửi email tự động thông qua giao thức SMTP)
+- JSON Web Token (JWT) và bcryptjs (Bảo mật, mã hóa và xác thực người dùng)
+- Node-cron (Dịch vụ lập lịch tác vụ nền tự động)
 
-- Node.js (v26.x hoặc mới hơn)
-- Express.js (Framework web)
-- MongoDB Native Driver (Kết nối cơ sở dữ liệu)
-- Jest & Supertest (Kiểm thử tự động)
+## 2. Yêu cầu hệ thống
 
-## Yêu cầu hệ thống
+- Node.js version 18.x hoặc cao hơn.
+- MongoDB Server đang hoạt động tại cổng mặc định 27017 (hoặc đường dẫn kết nối MongoDB Atlas).
+- MongoDB Database Tools (công cụ `mongoimport`) để nạp dữ liệu địa giới hành chính ban đầu.
 
-- Máy tính đã cài đặt Node.js và npm.
-- Cơ sở dữ liệu MongoDB đang chạy tại localhost:27017.
-- Database tên là `vietnam_provinces` có collection `provinces` chứa dữ liệu địa giới hành chính.
+## 3. Hướng dẫn cài đặt và khởi chạy
 
-## Hướng dẫn thiết lập Cơ sở dữ liệu (MongoDB)
-
-Dự án này đã đính kèm sẵn dữ liệu địa giới hành chính của 34 tỉnh thành Việt Nam trong thư mục `data/` của mã nguồn:
-- `data/administrative_units.json` (Danh sách các đơn vị hành chính)
-- `data/administrative_regions.json` (Danh sách các vùng địa lý)
-- `data/provinces.json` (Danh sách 34 tỉnh thành và các xã/phường đi kèm)
-
-Để nạp dữ liệu này vào MongoDB chạy local của bạn, hãy làm theo các bước hướng dẫn chi tiết sau:
-
-### 1. Chuẩn bị công cụ nạp dữ liệu (mongoimport)
-Công cụ `mongoimport` là một phần của bộ **MongoDB Database Tools**. 
-- Nếu bạn chạy lệnh `mongoimport --version` trong Terminal hoặc Command Prompt báo lỗi "command not found" (lệnh không được nhận diện), bạn cần tải bộ công cụ này từ trang chủ của MongoDB: [https://www.mongodb.com/try/download/database-tools](https://www.mongodb.com/try/download/database-tools).
-- Sau khi tải và giải nén, hãy thêm đường dẫn thư mục `bin` chứa file `mongoimport` vào biến môi trường PATH của hệ điều hành, hoặc copy file `mongoimport.exe` (trên Windows) vào thư mục gốc của dự án này để chạy trực tiếp.
-
-### 2. Thực hiện nạp dữ liệu
-Hãy mở Terminal hoặc Command Prompt tại thư mục gốc của dự án này và chạy tuần tự 3 lệnh sau:
-
+### Bước 1: Cài đặt dependencies
+Mở terminal tại thư mục gốc của EzRoom-Backend và chạy lệnh:
 ```bash
-mongoimport --db vietnam_provinces --collection administrative_units --file data/administrative_units.json --jsonArray --drop
-mongoimport --db vietnam_provinces --collection provinces --file data/provinces.json --jsonArray --drop
-mongoimport --db vietnam_provinces --collection administrative_regions --file data/administrative_regions.json --jsonArray --drop
+npm install
 ```
 
-*Giải thích ý nghĩa các tham số:*
-- `--db`: Tên cơ sở dữ liệu cần import dữ liệu (`vietnam_provinces`).
-- `--collection`: Tên bảng (collection) cần tạo và nạp dữ liệu.
-- `--file`: Đường dẫn tương đối tới file JSON dữ liệu nguồn.
-- `--jsonArray`: Khai báo cấu trúc của file nguồn là một mảng JSON (bao quanh bởi dấu ngoặc vuông `[]`).
-- `--drop`: Xóa dữ liệu cũ nếu collection đã tồn tại trước khi ghi đè dữ liệu mới. Lựa chọn này giúp dữ liệu của bạn không bao giờ bị trùng lặp khi chạy lệnh nhiều lần.
-
-*Lưu ý cho MongoDB có bảo mật:*
-Nếu MongoDB của bạn yêu cầu tài khoản và mật khẩu để kết nối, hãy bổ sung các tham số xác thực vào câu lệnh:
+### Bước 2: Thiết lập cơ sở dữ liệu MongoDB
+Nạp dữ liệu 34 tỉnh thành và các phường/xã trực thuộc vào MongoDB từ thư mục `data/`:
 ```bash
-mongoimport --host localhost --port 27017 -u <tên_đăng_nhập> -p <mật_khẩu> --authenticationDatabase admin --db vietnam_provinces --collection provinces --file data/provinces.json --jsonArray --drop
+mongoimport --db ezroom --collection administrative_units --file data/administrative_units.json --jsonArray --drop
+mongoimport --db ezroom --collection provinces --file data/provinces.json --jsonArray --drop
+mongoimport --db ezroom --collection administrative_regions --file data/administrative_regions.json --jsonArray --drop
 ```
 
-### 3. Xác minh dữ liệu đã nạp thành công
-Bạn có thể kiểm tra xem dữ liệu đã được nạp chính xác chưa bằng một trong các cách sau:
-- Sử dụng phần mềm đồ họa **MongoDB Compass**: Kết nối tới `mongodb://localhost:27017`, bạn sẽ thấy database `vietnam_provinces` xuất hiện với đầy đủ 3 collection và số lượng bản ghi tương ứng.
-- Hoặc sử dụng Terminal thông qua **mongosh**:
+### Bước 3: Cấu hình biến môi trường
+Sao chép file `.env.example` thành file `.env`:
+```bash
+cp .env.example .env
+```
+Cập nhật các khóa cấu hình bên trong file `.env` theo hướng dẫn chi tiết tại Mục 4 bên dưới để kết nối các dịch vụ của riêng bạn.
+
+### Bước 4: Khởi chạy Server
+
+- Chế độ phát triển (Development với hot-reload):
   ```bash
-  mongosh
-  use vietnam_provinces
-  db.provinces.countDocuments()
-  ```
-  Kết quả trả về phải là số `34`.
-
----
-
-## Hướng dẫn cài đặt và chạy local (Backend Server)
-
-Sau khi cơ sở dữ liệu đã sẵn sàng, hãy thực hiện cài đặt và chạy ứng dụng API:
-
-1. Cài đặt các thư viện Node.js phụ thuộc:
-   ```bash
-   npm install
-   ```
-
-2. Khởi chạy server phát triển (Development Server):
-   ```bash
-   npm start
-   ```
-   Server sẽ lắng nghe trên cổng 3000 tại tất cả các card mạng (`0.0.0.0`), cho phép kết nối từ cả máy ảo lẫn thiết bị thật trong mạng nội bộ. Mặc định chạy tại: `http://localhost:3000`.
-
-3. Chạy kiểm thử tự động để đảm bảo kết nối hoạt động bình thường:
-   ```bash
-   npm test
-   ```
-
----
-
-## Danh sách API Endpoints
-
-### 1. Kiểm tra trạng thái hệ thống
-- Path: `GET /health`
-- HTTP Method: GET
-- Kiểu trả về: JSON
-- Response Mẫu:
-  ```json
-  {
-    "status": "ok"
-  }
+  npm run dev
   ```
 
-### 2. Lấy danh sách Tỉnh/Thành phố và Phường/Xã
-- Path: `GET /api/provinces`
-- HTTP Method: GET
-- Kiểu trả về: JSON Array
-- Mô tả: API truy vấn cơ sở dữ liệu MongoDB, tự động chuyển đổi cấu trúc các trường từ dạng PascalCase sang dạng camelCase chuẩn REST API, lồng ghép phường/xã trực tiếp bên trong tỉnh/thành tương ứng và trả về kết quả.
-- Response Mẫu:
-  ```json
-  [
-    {
-      "code": "01",
-      "name": "Hà Nội",
-      "fullName": "Thành phố Hà Nội",
-      "codeName": "ha_noi",
-      "type": "province",
-      "administrativeUnitId": 1,
-      "wards": [
-        {
-          "code": "00004",
-          "name": "Ba Đình",
-          "fullName": "Phường Ba Đình",
-          "codeName": "ba_dinh",
-          "type": "ward",
-          "administrativeUnitId": 3
-        }
-      ]
-    }
-  ]
+- Biên dịch sang JavaScript (Build production):
+  ```bash
+  npm run build
   ```
 
----
+- Khởi chạy bản build production:
+  ```bash
+  npm start
+  ```
 
-## Hướng dẫn kết nối từ Android Studio
+Mặc định server sẽ lắng nghe tại cổng 3000: `http://localhost:3000`.
 
-Khi thực hiện kiểm thử trên thiết bị Android, hãy cấu hình Base URL của Retrofit tùy thuộc vào thiết bị test:
+## 4. Hướng dẫn cấu hình các dịch vụ bên thứ ba (Third-party Services)
 
-1. Chạy trên máy ảo Android (Emulator):
-   - URL: `http://10.0.2.2:3000/`
+Để kiểm thử đầy đủ các tính năng của hệ thống với tài khoản riêng của bạn, vui lòng thay thế các thông số trong file `.env` như sau:
 
-2. Chạy trên thiết bị thật (Physical Device):
-   - Máy tính và điện thoại phải kết nối chung một mạng Wi-Fi.
-   - Tìm IP nội bộ của máy tính (Ví dụ: 192.168.2.12).
-   - URL: `http://<IP-máy-tính>:3000/`
+### A. Cấu hình PayOS (Thu tiền cọc và thanh toán hóa đơn)
+1. Đăng ký tài khoản tại https://payos.vn.
+2. Tạo kênh thanh toán và lấy các thông số API:
+   - `PAYOS_CLIENT_ID`: Mã Client ID do PayOS cấp.
+   - `PAYOS_API_KEY`: Khóa API Key.
+   - `PAYOS_CHECKSUM_KEY`: Khóa mã hóa Checksum Key.
+3. Lưu ý về IP Webhook: Khi PayOS gửi thông báo thanh toán (Webhook), hãy đảm bảo địa chỉ IP công cộng của server backend đã được đăng ký trong danh sách IP cho phép trên cổng quản trị PayOS.
+
+### B. Cấu hình PayOS Payout (Giải ngân tiền cọc tự động cho chủ trọ)
+1. Kích hoạt tính năng Tài khoản chi (Payout) trên cổng quản trị PayOS.
+2. Lấy bộ khóa dành riêng cho Payout:
+   - `PAYOS_PAYOUT_CLIENT_ID`: Client ID của tài khoản chi.
+   - `PAYOS_PAYOUT_API_KEY`: API Key của tài khoản chi.
+   - `PAYOS_PAYOUT_CHECKSUM_KEY`: Checksum Key của tài khoản chi.
+
+### C. Cấu hình Cloudinary (Lưu trữ ảnh phòng, CCCD, ảnh đại diện)
+1. Đăng ký tài khoản Cloudinary tại https://cloudinary.com.
+2. Truy cập Dashboard để lấy thông tin xác thực API:
+   - `CLOUDINARY_CLOUD_NAME`: Tên Cloud Name của bạn.
+   - `CLOUDINARY_API_KEY`: Khóa API Key.
+   - `CLOUDINARY_API_SECRET`: Khóa bí mật API Secret.
+
+### D. Cấu hình SMTP Gmail (Gửi email mã xác nhận OTP và thông báo)
+1. Đăng nhập tài khoản Google của bạn, bật tính năng Xác minh 2 bước (2-Step Verification).
+2. Truy cập mục Mật khẩu ứng dụng (App Passwords) để tạo mật khẩu riêng biệt gồm 16 ký tự.
+3. Điền vào file `.env`:
+   - `SMTP_HOST`: smtp.gmail.com
+   - `SMTP_PORT`: 587
+   - `SMTP_USER`: Địa chỉ email Gmail của bạn.
+   - `SMTP_PASS`: Mật khẩu ứng dụng 16 ký tự vừa tạo.
+
+### E. Cấu hình trang quản trị Admin
+- `ADMIN_USERNAME`: Tên tài khoản đăng nhập trang quản trị.
+- `ADMIN_PASSWORD_HASH`: Chuỗi mã hóa bcrypt của mật khẩu đăng nhập.
+
+## 5. Danh sách các phân hệ API chính
+
+- `/api/auth`: Đăng ký, đăng nhập, xác thực JWT, quên mật khẩu, đổi mật khẩu.
+- `/api/users`: Thông tin cá nhân, nộp hồ sơ eKYC, lịch sử uy tín người thuê.
+- `/api/properties`: Quản lý dãy trọ/tòa nhà phức hợp (Complex Property) và căn hộ độc lập.
+- `/api/rooms`: Đăng tin tìm phòng, tìm kiếm và lọc nâng cao, danh sách phòng của chủ nhà.
+- `/api/contracts`: Tạo hợp đồng điện tử, ký kết hai bên, quản lý tiền cọc Escrow.
+- `/api/invoices`: Lập hóa đơn điện nước hàng tháng, thanh toán trực tuyến qua mã QR PayOS.
+- `/api/disputes`: Giải quyết tranh chấp hợp đồng, kháng cáo khóa bài đăng, kháng cáo đánh giá.
+- `/api/admin`: Thống kê bảng điều khiển, duyệt hồ sơ eKYC, kiểm duyệt tin đăng, quản lý tài khoản và dòng tiền.
+- `/api/locations`: Danh sách 34 tỉnh thành và phường/xã theo mô hình địa giới hành chính mới.
+
+## 6. Hướng dẫn kết nối từ ứng dụng di động và web admin
+
+- Web Admin (EzRoom-Admin): Cấu hình `VITE_API_URL=http://localhost:3000` trong file `.env` của Admin.
+- Android Máy ảo (Emulator): Sử dụng Base URL `http://10.0.2.2:3000/`.
+- Android Thiết bị thật (Physical Device): Sử dụng địa chỉ IP mạng nội bộ của máy tính chạy server, ví dụ `http://192.168.1.15:3000/`.

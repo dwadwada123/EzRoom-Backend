@@ -1,12 +1,9 @@
-# Agent skill customization folder
-.agents/
-
-# Dependency directories
+# Dependencies
 node_modules/
 jspm_packages/
 web_modules/
 
-# Build outputs and temporary files
+# Build outputs
 dist/
 build/
 .cache/
@@ -15,27 +12,32 @@ build/
 .parcel-cache
 .tsbuildinfo
 
-# Environment variables
+# Environment variables & secrets
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-.env.staging.local
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+
+# Test scripts & temp files
+test*.js
+check_db_*.js
+translateComments.js
 
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# OS files
-.DS_Store
-Thumbs.db
+# Testing & Coverage
+coverage/
+.nyc_output/
 
-# IDE/Editor configurations
+# IDE & Editor files
 .vscode/
 .idea/
 *.suo
@@ -44,12 +46,22 @@ Thumbs.db
 *.sln
 *.sw?
 
-# Testing coverage
-coverage/
-.nyc_output
+# OS files
+.DS_Store
+Thumbs.db
 
-# Agent and local temp folders
+# AI & Assistant files
+.agents/
+.gemini/
+.cursor/
+.cursorrules
+.cline/
+.clinerules
 .superpowers/
+skills/
+skills-lock.json
+*.artifact.md
+scratch/
 .temp/
 .tmp/
 docs/

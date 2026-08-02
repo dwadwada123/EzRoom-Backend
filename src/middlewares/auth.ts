@@ -11,7 +11,9 @@ export interface AuthenticatedRequest extends Request {
   };
 }
 
-export function authMiddleware(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+import { User } from '../models/user';
+
+export async function authMiddleware(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ success: false, error: 'Authorization header missing or malformed.' });
@@ -21,6 +23,17 @@ export function authMiddleware(req: AuthenticatedRequest, res: Response, next: N
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as { id: string; email: string; role: 'RENTER' | 'HOST' | 'ADMIN' };
     req.user = decoded;
+
+    if (decoded.role !== 'ADMIN') {
+      const dbUser = await User.findById(decoded.id).select('status lockReason').lean();
+      if (dbUser && dbUser.status === 'LOCKED') {
+        return res.status(403).json({
+          success: false,
+          error: `Tài khoản của bạn đã bị khóa. Lý do: ${dbUser.lockReason || 'Vi phạm điều khoản sử dụng'}`
+        });
+      }
+    }
+
     return next();
   } catch (error) {
     return res.status(401).json({ success: false, error: 'Invalid or expired token.' });

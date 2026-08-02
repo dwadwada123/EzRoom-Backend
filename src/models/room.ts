@@ -13,29 +13,35 @@ export interface IRoom {
   structure: 'SINGLE' | 'WHOLE' | 'APARTMENT';
   floorArea: number;
   mezzanineArea: number;
+  capacity?: number;
   detailedAreas: Array<{ id: string; roomName: string; areaValue: number }>;
   images: Array<{ url: string; category: string }>;
   amenities: Array<{ name: string; compensationAmount: number }>;
-  status: 'ACTIVE' | 'RENTED' | 'PENDING' | 'HIDDEN' | 'REMOVED';
+  status: 'ACTIVE' | 'RENTED' | 'PENDING' | 'HIDDEN' | 'REMOVED' | 'DELETED';
   latitude: number;
   longitude: number;
   isUserHidden: boolean;
-  removalInfo?: { reason: string; dateRemoved: string } | null;
+  hostId: string;
+  removalInfo?: { reason: string; dateRemoved: string; appealText?: string; appealImages?: string[]; appealStatus?: 'PENDING' | 'APPROVED' | 'REJECTED'; appealDate?: string } | null;
+  reports?: Array<{ reason: string; date: string; reporterName: string }>;
+  rating: number;
+  reviewCount: number;
 }
 
 const RoomSchema = new Schema<IRoom>({
   _id: { type: String, required: true },
   propertyId: { type: String, default: null },
   title: { type: String, required: true },
-  price: { type: Number, required: true },
-  electricityPrice: { type: Number, default: 3500 },
-  waterPrice: { type: Number, default: 15000 },
+  price: { type: Number, required: true, min: 0 },
+  electricityPrice: { type: Number, default: 3500, min: 0 },
+  waterPrice: { type: Number, default: 15000, min: 0 },
   address: { type: String, required: true },
   detailedAddress: { type: String, required: true },
   description: { type: String },
   structure: { type: String, enum: ['SINGLE', 'WHOLE', 'APARTMENT'], required: true },
-  floorArea: { type: Number, required: true },
-  mezzanineArea: { type: Number, default: 0.0 },
+  floorArea: { type: Number, required: true, min: 0 },
+  mezzanineArea: { type: Number, default: 0.0, min: 0 },
+  capacity: { type: Number, default: 0, min: 0 },
   detailedAreas: [
     {
       id: { type: String, required: true },
@@ -55,14 +61,28 @@ const RoomSchema = new Schema<IRoom>({
       compensationAmount: { type: Number, required: true }
     }
   ],
-  status: { type: String, enum: ['ACTIVE', 'RENTED', 'PENDING', 'HIDDEN', 'REMOVED'], default: 'ACTIVE' },
-  latitude: { type: Number, required: true },
-  longitude: { type: Number, required: true },
+  status: { type: String, enum: ['ACTIVE', 'RENTED', 'PENDING', 'HIDDEN', 'REMOVED', 'DELETED'], default: 'PENDING', index: true },
+  latitude: { type: Number, required: true, index: true },
+  longitude: { type: Number, required: true, index: true },
   isUserHidden: { type: Boolean, default: false },
+  hostId: { type: String, default: '' },
   removalInfo: {
-    reason: { type: String, default: '' },
-    dateRemoved: { type: String, default: '' }
-  }
+    reason: { type: String },
+    dateRemoved: { type: String },
+    appealText: { type: String },
+    appealImages: { type: [String], default: [] },
+    appealStatus: { type: String, enum: ['PENDING', 'APPROVED', 'REJECTED'], default: undefined },
+    appealDate: { type: String }
+  },
+  reports: [
+    {
+      reason: { type: String },
+      date: { type: String },
+      reporterName: { type: String }
+    }
+  ],
+  rating: { type: Number, default: 0 },
+  reviewCount: { type: Number, default: 0 }
 });
 
 export const Room = mongoose.model<IRoom>('Room', RoomSchema);

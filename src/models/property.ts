@@ -12,6 +12,8 @@ export interface IProperty {
   longitude: number;
   isHidden: boolean;
   hostId: string;
+  rating: number;
+  reviewCount: number;
 }
 
 const PropertySchema = new Schema<IProperty>({
@@ -25,7 +27,9 @@ const PropertySchema = new Schema<IProperty>({
   latitude: { type: Number, required: true },
   longitude: { type: Number, required: true },
   isHidden: { type: Boolean, default: false },
-  hostId: { type: String, required: true }
+  hostId: { type: String, required: true },
+  rating: { type: Number, default: 0 },
+  reviewCount: { type: Number, default: 0 }
 });
 
 export const Property = mongoose.model<IProperty>('Property', PropertySchema);

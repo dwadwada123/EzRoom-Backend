@@ -17,6 +17,7 @@ export interface IInvoice {
   paymentMethod?: string | null;
   commission: number; // Platform fee: roomPrice * 0.05
   finalRevenue: number; // Host revenue: totalAmount - commission
+  orderCode?: number;
 }
 
 const InvoiceSchema = new Schema<IInvoice>({
@@ -40,7 +41,8 @@ const InvoiceSchema = new Schema<IInvoice>({
   dateCreated: { type: String, required: true },
   paymentMethod: { type: String, default: null },
   commission: { type: Number, default: 0 },
-  finalRevenue: { type: Number, default: 0 }
+  finalRevenue: { type: Number, default: 0 },
+  orderCode: { type: Number }
 });
 
 export const Invoice = mongoose.model<IInvoice>('Invoice', InvoiceSchema);
