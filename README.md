@@ -17,8 +17,7 @@ Hệ thống Backend API cho nền tảng quản lý và cho thuê phòng trọ 
 ## 2. Yêu cầu hệ thống
 
 - Node.js version 18.x hoặc cao hơn.
-- MongoDB Server đang hoạt động tại cổng mặc định 27017 (hoặc đường dẫn kết nối MongoDB Atlas).
-- MongoDB Database Tools (công cụ `mongoimport`) để nạp dữ liệu địa giới hành chính ban đầu.
+- MongoDB Server đang hoạt động tại cổng mặc định 27017 (hoặc chuỗi kết nối MongoDB Atlas).
 
 ## 3. Hướng dẫn cài đặt và khởi chạy
 
@@ -28,22 +27,16 @@ Mở terminal tại thư mục gốc của EzRoom-Backend và chạy lệnh:
 npm install
 ```
 
-### Bước 2: Thiết lập cơ sở dữ liệu MongoDB
-Nạp dữ liệu 34 tỉnh thành và các phường/xã trực thuộc vào MongoDB từ thư mục `data/`:
-```bash
-mongoimport --db ezroom --collection administrative_units --file data/administrative_units.json --jsonArray --drop
-mongoimport --db ezroom --collection provinces --file data/provinces.json --jsonArray --drop
-mongoimport --db ezroom --collection administrative_regions --file data/administrative_regions.json --jsonArray --drop
-```
-
-### Bước 3: Cấu hình biến môi trường
+### Bước 2: Cấu hình biến môi trường
 Sao chép file `.env.example` thành file `.env`:
 ```bash
 cp .env.example .env
 ```
-Cập nhật các khóa cấu hình bên trong file `.env` theo hướng dẫn chi tiết tại Mục 4 bên dưới để kết nối các dịch vụ của riêng bạn.
+Cập nhật các khóa cấu hình bên trong file `.env` theo hướng dẫn chi tiết tại Mục 4 bên dưới để kết nối các dịch vụ của riêng bạn (MongoDB URI, PayOS, Cloudinary, Gmail SMTP).
 
-### Bước 4: Khởi chạy Server
+Lưu ý về dữ liệu địa giới hành chính: Danh mục các tỉnh thành và phường xã của Việt Nam đã được tích hợp sẵn trực tiếp trong ứng dụng di động Android (`assets/data/vietnam_provinces.json`) để tải offline tức thì và tối ưu hiệu năng, do đó bạn không cần phải nạp thủ công dữ liệu tỉnh thành vào MongoDB. Cơ sở dữ liệu MongoDB sẽ tự động khởi tạo các bảng (collections) khi hệ thống hoạt động.
+
+### Bước 3: Khởi chạy Server
 
 - Chế độ phát triển (Development với hot-reload):
   ```bash
@@ -111,7 +104,7 @@ Mặc định server sẽ lắng nghe tại cổng 3000: `http://localhost:3000`
 - `/api/invoices`: Lập hóa đơn điện nước hàng tháng, thanh toán trực tuyến qua mã QR PayOS.
 - `/api/disputes`: Giải quyết tranh chấp hợp đồng, kháng cáo khóa bài đăng, kháng cáo đánh giá.
 - `/api/admin`: Thống kê bảng điều khiển, duyệt hồ sơ eKYC, kiểm duyệt tin đăng, quản lý tài khoản và dòng tiền.
-- `/api/locations`: Danh sách 34 tỉnh thành và phường/xã theo mô hình địa giới hành chính mới.
+- `/api/location`: Gợi ý địa chỉ và tọa độ bản đồ hỗ trợ người dùng nhập vị trí.
 
 ## 6. Hướng dẫn kết nối từ ứng dụng di động và web admin
 
