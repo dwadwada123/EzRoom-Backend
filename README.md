@@ -12,7 +12,9 @@ Hệ thống Backend API cho nền tảng quản lý và cho thuê phòng trọ 
 - Cloudinary SDK (Lưu trữ và tối ưu hóa hình ảnh đám mây)
 - Nodemailer (Dịch vụ gửi email tự động thông qua giao thức SMTP)
 - JSON Web Token (JWT) và bcryptjs (Bảo mật, mã hóa và xác thực người dùng)
-- Node-cron (Dịch vụ lập lịch tác vụ nền tự động)
+- Node-cron (Dịch vụ lập lịch tác vụ nền tự động giải ngân tiền cọc Escrow)
+- Multer (Xử lý tải lên tập tin đa phương tiện)
+- Express Rate Limit (Bảo vệ API chống brute-force và quá tải)
 
 ## 2. Yêu cầu hệ thống
 
@@ -97,13 +99,19 @@ Mặc định server sẽ lắng nghe tại cổng 3000: `http://localhost:3000`
 ## 5. Danh sách các phân hệ API chính
 
 - `/api/auth`: Đăng ký, đăng nhập, xác thực JWT, quên mật khẩu, đổi mật khẩu.
-- `/api/users`: Thông tin cá nhân, nộp hồ sơ eKYC, lịch sử uy tín người thuê.
+- `/api/media`: Tải lên hình ảnh phòng trọ, hồ sơ CCCD xác thực eKYC lên Cloudinary.
+- `/api/users`: Thông tin cá nhân, nộp hồ sơ eKYC, danh sách yêu thích, tài khoản ngân hàng thụ hưởng.
 - `/api/properties`: Quản lý dãy trọ/tòa nhà phức hợp (Complex Property) và căn hộ độc lập.
 - `/api/rooms`: Đăng tin tìm phòng, tìm kiếm và lọc nâng cao, danh sách phòng của chủ nhà.
 - `/api/contracts`: Tạo hợp đồng điện tử, ký kết hai bên, quản lý tiền cọc Escrow.
 - `/api/invoices`: Lập hóa đơn điện nước hàng tháng, thanh toán trực tuyến qua mã QR PayOS.
-- `/api/disputes`: Giải quyết tranh chấp hợp đồng, kháng cáo khóa bài đăng, kháng cáo đánh giá.
+- `/api/appointments`: Đặt lịch hẹn xem phòng trực tiếp, duyệt hoặc từ chối lịch hẹn.
+- `/api/chat`: Hội thoại tin nhắn trực tiếp giữa Người thuê và Chủ trọ.
+- `/api/notifications`: Hệ thống thông báo tự động (hợp đồng, hóa đơn, lịch hẹn, duyệt bài).
+- `/api/room-reviews` & `/api/renter-reviews`: Đánh giá chất lượng phòng, đánh giá uy tín người thuê, báo cáo vi phạm đánh giá.
+- `/api/disputes`: Giải quyết tranh chấp hợp đồng, kháng cáo khóa bài đăng.
 - `/api/admin`: Thống kê bảng điều khiển, duyệt hồ sơ eKYC, kiểm duyệt tin đăng, quản lý tài khoản và dòng tiền.
+- `/api/amenities`: Quản lý danh mục tiện ích phòng trọ.
 - `/api/location`: Gợi ý địa chỉ và tọa độ bản đồ hỗ trợ người dùng nhập vị trí.
 
 ## 6. Hướng dẫn kết nối từ ứng dụng di động và web admin
