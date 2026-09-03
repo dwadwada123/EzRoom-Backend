@@ -94,9 +94,9 @@ export async function createContract(req: Request, res: Response) {
     const notifMsg = `Chủ nhà ${hostName} đã gửi hợp đồng thuê "${roomTitle}". Vui lòng kiểm tra và ký xác nhận.`;
 
     if (user) {
-      await sendNotificationHelper(user._id.toString(), notifTitle, notifMsg, 'CONTRACT', contract._id);
+      await sendNotificationHelper(user._id.toString(), notifTitle, notifMsg, 'CONTRACT', contract._id.toString());
     } else {
-      await sendNotificationHelper(renterPhone.trim(), notifTitle, notifMsg, 'CONTRACT', contract._id);
+      await sendNotificationHelper(renterPhone.trim(), notifTitle, notifMsg, 'CONTRACT', contract._id.toString());
     }
 
     return res.status(201).json({ success: true, contract });
@@ -140,7 +140,7 @@ export async function signContract(req: Request, res: Response) {
         'Hợp đồng đã được ký',
         `Người thuê ${contract.renterName} đã ký xác nhận hợp đồng phòng "${roomTitle}".`,
         'CONTRACT',
-        contract._id
+        contract._id.toString()
       );
     }
 
@@ -170,7 +170,7 @@ export async function getPaymentQR(req: Request, res: Response) {
       const paymentData = {
         orderCode,
         amount: contract.depositAmount,
-        description: `Coc ${contract._id.substring(0, 10)}`,
+        description: `Coc ${contract._id.toString().substring(0, 10)}`,
         cancelUrl: `https://ezroom.vn/payment/cancel`,
         returnUrl: `https://ezroom.vn/payment/success`
       };
@@ -211,7 +211,7 @@ async function getHostUserId(roomId: string, hostName?: string): Promise<string 
   }
   if (hostName) {
     const hostUser = await User.findOne({ name: hostName, role: 'HOST' });
-    if (hostUser) return hostUser._id;
+    if (hostUser) return hostUser._id.toString();
   }
   return null;
 }
@@ -264,7 +264,7 @@ export async function confirmPayment(req: Request, res: Response) {
         'Tiền cọc đã được thanh toán',
         `Người thuê ${contract.renterName} đã thanh toán tiền cọc ${(contract.depositAmount || 0).toLocaleString('vi-VN')}đ cho hợp đồng phòng "${roomTitle}".`,
         'CONTRACT',
-        contract._id
+        contract._id.toString()
       );
     }
 
@@ -314,7 +314,7 @@ export async function terminateContract(req: Request, res: Response) {
           'Hợp đồng đã chấm dứt sớm',
           `${senderRoleName} đã yêu cầu chấm dứt hợp đồng phòng "${room.title}" với lý do: ${contract.cancelReason}`,
           'CONTRACT',
-          contract._id
+          contract._id.toString()
         );
       }
     }
@@ -336,12 +336,12 @@ export async function getContracts(req: Request, res: Response) {
     if (user) {
       if (user.role === 'HOST') {
         const { Property } = await import('../models/property');
-        const hostProperties = await Property.find({ hostId: user._id });
-        const propertyIds = hostProperties.map(p => p._id);
+        const hostProperties = await Property.find({ hostId: user._id.toString() });
+        const propertyIds = hostProperties.map(p => p._id.toString());
         const rooms = await Room.find({
           $or: [
             { propertyId: { $in: propertyIds } },
-            { propertyId: null, hostId: user._id }
+            { propertyId: null, hostId: user._id.toString() }
           ]
         });
         const roomIds = rooms.map(r => r._id);
@@ -397,14 +397,14 @@ export async function getHostTenants(req: Request, res: Response) {
     const { hostId } = req.params;
     const { Property } = await import('../models/property');
     const hostProperties = await Property.find({ hostId });
-    const propertyIds = hostProperties.map(p => p._id);
+    const propertyIds = hostProperties.map(p => p._id.toString());
     const rooms = await Room.find({
       $or: [
         { propertyId: { $in: propertyIds } },
         { propertyId: null, hostId }
       ]
     });
-    const roomIds = rooms.map(r => r._id);
+    const roomIds = rooms.map(r => r._id.toString());
 
     const contracts = await Contract.find({ roomId: { $in: roomIds } });
 

@@ -6,6 +6,7 @@ import { Message } from '../models/message';
 import { Conversation } from '../models/conversation';
 import { sendNotificationHelper } from './notification';
 import { payOS } from '../config/payos';
+import mongoose from 'mongoose';
 
 export async function createInvoice(req: Request, res: Response) {
   try {
@@ -34,7 +35,7 @@ export async function createInvoice(req: Request, res: Response) {
         'Hóa đơn thanh toán mới',
         `Hóa đơn phòng "${roomName}" cho kỳ ${period} đã được tạo. Vui lòng thanh toán sớm.`,
         'INVOICE',
-        invoice._id
+        invoice._id.toString()
       );
     } else {
       console.log(`[INVOICE NOTIF WARNING] Could not find active contract or renterId for room ${roomId}`);
@@ -110,7 +111,7 @@ export async function getInvoicePaymentQR(req: Request, res: Response) {
       const paymentData = {
         orderCode,
         amount: totalAmount,
-        description: `HD ${invoice._id.substring(0, 10)}`,
+        description: `HD ${invoice._id.toString().substring(0, 10)}`,
         cancelUrl: `https://ezroom.vn/payment/cancel`,
         returnUrl: `https://ezroom.vn/payment/success`
       };
@@ -203,7 +204,7 @@ export async function payInvoice(req: Request, res: Response) {
         'Hóa đơn đã được thanh toán',
         `Hóa đơn phòng "${invoice.roomName}" (${invoice.period}) đã được thanh toán qua ${paymentMethod}. Số tiền thực nhận: ${(finalRevenue || 0).toLocaleString('vi-VN')}đ (Đã khấu trừ 5% phí hoa hồng sàn).`,
         'INVOICE',
-        invoice._id
+        invoice._id.toString()
       );
     }
 
@@ -222,7 +223,7 @@ export async function getInvoices(req: Request, res: Response) {
       if (user.role === 'HOST') {
         const { Property } = await import('../models/property');
         const hostProperties = await Property.find({ hostId: user.id });
-        const propertyIds = hostProperties.map(p => p._id);
+        const propertyIds = hostProperties.map(p => p._id.toString());
         const rooms = await Room.find({
           $or: [
             { propertyId: { $in: propertyIds } },
@@ -251,7 +252,7 @@ export async function getInvoices(req: Request, res: Response) {
     const contractMap = new Map(activeContracts.map(c => [c.roomId, c]));
 
     const mapped = invoices.map(inv => {
-      const room = roomMap.get(inv.roomId);
+      const room = roomMap.get(new mongoose.Types.ObjectId(inv.roomId));
       const contract = contractMap.get(inv.roomId);
       const obj = inv.toObject();
 
@@ -311,7 +312,7 @@ export async function remindInvoice(req: Request, res: Response) {
     const notifMsg = `Chủ nhà nhắc bạn thanh toán hóa đơn phòng "${invoice.roomName}" (${invoice.period}) với tổng số tiền ${totalAmount.toLocaleString('vi-VN')}đ. Vui lòng thanh toán sớm qua cổng PayOS.`;
 
     // 1. Send Notification
-    await sendNotificationHelper(renterId, 'Nhắc thanh toán hóa đơn', notifMsg, 'INVOICE', invoice._id);
+    await sendNotificationHelper(renterId, 'Nhắc thanh toán hóa đơn', notifMsg, 'INVOICE', invoice._id.toString());
 
     // 2. Send Chat Message
     let conv = await Conversation.findOne({
@@ -381,7 +382,7 @@ export async function sendInvoiceReceipt(req: Request, res: Response) {
     const notifMsg = `Chủ nhà đã gửi biên lai xác nhận thanh toán hóa đơn phòng "${invoice.roomName}" (${invoice.period}). Số tiền: ${totalAmount.toLocaleString('vi-VN')}đ. Cảm ơn bạn!`;
 
     // 1. Send Notification
-    await sendNotificationHelper(renterId, 'Biên lai thanh toán hóa đơn', notifMsg, 'INVOICE', invoice._id);
+    await sendNotificationHelper(renterId, 'Biên lai thanh toán hóa đơn', notifMsg, 'INVOICE', invoice._id.toString());
 
     // 2. Send Chat Message
     let conv = await Conversation.findOne({

@@ -5,6 +5,7 @@ import multer from 'multer';
 
 const upload = multer();
 const router = Router();
+
 router.post('/auth/register', register);
 router.post('/auth/login', login);
 router.post('/auth/admin-login', adminLogin);

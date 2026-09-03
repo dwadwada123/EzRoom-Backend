@@ -138,7 +138,7 @@ export async function checkAndAutoDisburseContracts() {
         const payoutRes = await executePayOSPayout(
           accInfo,
           contract.depositAmount,
-          contract._id
+          contract._id.toString()
         );
 
         const payoutTxId = payoutRes.payoutId || `PAYOUT-EZ-${Date.now().toString().slice(-8)}`;
@@ -167,7 +167,7 @@ export async function checkAndAutoDisburseContracts() {
             'Tự động giải ngân tiền cọc',
             `EzRoom đã giải ngân thành công tiền cọc ${(contract.depositAmount || 0).toLocaleString('vi-VN')}đ cho hợp đồng "${roomTitle}" vào tài khoản ${accInfo.bankName} (STK: ${accInfo.accountNumber}). ${payoutNote}`,
             'CONTRACT',
-            contract._id
+            contract._id.toString()
           );
         }
       }

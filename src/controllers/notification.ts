@@ -115,7 +115,7 @@ export async function sendNotificationHelper(userId: string, title: string, cont
     }
 
     const notif = new Notification({
-      _id: Date.now().toString() + Math.random().toString(36).substring(2, 7),
+      _id: Date.now().toString() + Math.random().toString(36).substring(2, 8),
       userId,
       title,
       content,

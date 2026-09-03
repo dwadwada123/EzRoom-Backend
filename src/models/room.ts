@@ -1,7 +1,6 @@
 import mongoose, { Schema } from 'mongoose';
 
 export interface IRoom {
-  _id: string;
   propertyId?: string | null;
   title: string;
   price: number;
@@ -10,7 +9,7 @@ export interface IRoom {
   address: string;
   detailedAddress: string;
   description?: string;
-  structure: 'SINGLE' | 'WHOLE' | 'APARTMENT';
+  structure: 'SINGLE' | 'COMPLEX';
   floorArea: number;
   mezzanineArea: number;
   capacity?: number;
@@ -29,7 +28,6 @@ export interface IRoom {
 }
 
 const RoomSchema = new Schema<IRoom>({
-  _id: { type: String, required: true },
   propertyId: { type: String, default: null },
   title: { type: String, required: true },
   price: { type: Number, required: true, min: 0 },
@@ -38,7 +36,7 @@ const RoomSchema = new Schema<IRoom>({
   address: { type: String, required: true },
   detailedAddress: { type: String, required: true },
   description: { type: String },
-  structure: { type: String, enum: ['SINGLE', 'WHOLE', 'APARTMENT'], required: true },
+  structure: { type: String, enum: ['SINGLE', 'COMPLEX'], required: true },
   floorArea: { type: Number, required: true, min: 0 },
   mezzanineArea: { type: Number, default: 0.0, min: 0 },
   capacity: { type: Number, default: 0, min: 0 },

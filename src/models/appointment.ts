@@ -1,7 +1,6 @@
 import mongoose, { Schema } from 'mongoose';
 
 export interface IAppointment {
-  _id: string;
   roomId: string;
   roomName: string;
   renterId?: string;
@@ -16,7 +15,6 @@ export interface IAppointment {
 }
 
 const AppointmentSchema = new Schema<IAppointment>({
-  _id: { type: String, required: true },
   roomId: { type: String, required: true },
   roomName: { type: String, required: true },
   renterId: { type: String, default: '' },
