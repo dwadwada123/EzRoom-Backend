@@ -35,8 +35,8 @@ function sanitizeUser(user: any) {
 
 export async function register(req: Request, res: Response) {
   try {
-    const { id, name, email, phone, avatarUrl, role, password } = req.body;
-    if (!id || !name || !email || !phone || !role) {
+    const { name, email, phone, avatarUrl, role, password } = req.body;
+    if ( !name || !email || !phone || !role) {
       return res.status(400).json({ success: false, error: 'Missing required registration parameters' });
     }
 
@@ -47,12 +47,12 @@ export async function register(req: Request, res: Response) {
 
     // B-01: Hash password with bcrypt before saving
     const hashedPassword = password ? await bcrypt.hash(password, 12) : '';
-    const user = new User({ _id: id, name, email, phone, avatarUrl, role, password: hashedPassword });
+    const user = new User({ name, email, phone, avatarUrl, role, password: hashedPassword });
     await user.save();
 
     // A-03: Extended token lifetime to 30 days
     const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
+      { id: user._id, email: user.email, role: user.role },
       JWT_SECRET_STR,
       { expiresIn: '30d' }
     );
@@ -70,10 +70,8 @@ export async function login(req: Request, res: Response) {
       return res.status(400).json({ success: false, error: 'Email is required' });
     }
 
-    let user = await User.findOne({ email: email.trim() });
-    if (!user) {
-      user = await User.findOne({ phone: email.trim() });
-    }
+    let user = await User.findOne({ email : email.trim() });
+
     if (!user) {
       return res.status(400).json({ success: false, error: 'Email hoặc mật khẩu không chính xác.' });
     }
@@ -95,7 +93,7 @@ export async function login(req: Request, res: Response) {
 
     // A-03: Extended to 30 days
     const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
+      { id: user._id, email: user.email, role: user.role },
       JWT_SECRET_STR,
       { expiresIn: '30d' }
     );

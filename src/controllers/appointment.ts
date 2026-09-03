@@ -48,7 +48,7 @@ export async function createAppointment(req: Request, res: Response) {
         'Lịch hẹn xem phòng mới',
         `${renterName} vừa đặt lịch hẹn xem phòng "${roomName}" vào ${time} ngày ${date}.`,
         'APPOINTMENT',
-        appointment._id
+        appointment._id.toString()
       );
     }
 
@@ -117,7 +117,7 @@ export async function updateAppointmentStatus(req: Request, res: Response) {
     let targetRenterId = appointment.renterId;
     if (!targetRenterId) {
       const renter = await User.findOne({ $or: [{ phone: appointment.renterPhone }, { name: appointment.renterName }] });
-      if (renter) targetRenterId = renter._id;
+      if (renter) targetRenterId = renter._id.toString();
     }
 
     if (targetRenterId) {
@@ -127,7 +127,7 @@ export async function updateAppointmentStatus(req: Request, res: Response) {
         'Trạng thái lịch hẹn',
         `Lịch hẹn xem phòng "${appointment.roomName}" ${statusText}.`,
         'APPOINTMENT',
-        appointment._id
+        appointment._id.toString()
       );
     }
 

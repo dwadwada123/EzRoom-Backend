@@ -1,7 +1,6 @@
 import mongoose, { Schema } from 'mongoose';
 
 export interface INotification {
-  _id: string;
   userId: string;
   title: string;
   content: string;
@@ -12,7 +11,6 @@ export interface INotification {
 }
 
 const NotificationSchema = new Schema<INotification>({
-  _id: { type: String, required: true },
   userId: { type: String, required: true, index: true },
   title: { type: String, required: true },
   content: { type: String, required: true },

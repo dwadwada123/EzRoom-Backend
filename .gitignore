@@ -13,7 +13,7 @@ build/
 .tsbuildinfo
 
 # Environment variables & secrets
-.env
+!.env
 .env.*
 !.env.example
 *.pem

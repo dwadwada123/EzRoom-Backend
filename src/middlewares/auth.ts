@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { User } from '../models/user';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'ezroom_secret_key_123';
 
@@ -10,8 +11,6 @@ export interface AuthenticatedRequest extends Request {
     role: 'RENTER' | 'HOST' | 'ADMIN';
   };
 }
-
-import { User } from '../models/user';
 
 export async function authMiddleware(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;

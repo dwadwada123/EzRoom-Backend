@@ -1,7 +1,6 @@
 import mongoose, { Schema } from 'mongoose';
 
 export interface IProperty {
-  _id: string;
   name: string;
   type: 'SINGLE' | 'COMPLEX';
   address: string;
@@ -17,7 +16,6 @@ export interface IProperty {
 }
 
 const PropertySchema = new Schema<IProperty>({
-  _id: { type: String, required: true },
   name: { type: String, required: true },
   type: { type: String, enum: ['SINGLE', 'COMPLEX'], required: true },
   address: { type: String, required: true },

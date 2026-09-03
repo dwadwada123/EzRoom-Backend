@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Room } from '../models/room';
 import { AuthenticatedRequest } from '../middlewares/auth';
+import mongoose from 'mongoose';
 
 export async function createRoom(req: AuthenticatedRequest, res: Response) {
   try {
@@ -16,11 +17,13 @@ export async function createRoom(req: AuthenticatedRequest, res: Response) {
       const { User } = await import('../models/user');
       const hostUser = await User.findById(hostId);
       if (!hostUser || hostUser.ekycStatus !== 'VERIFIED') {
+        console.log(hostUser)
+        console.log(hostUser?.ekycStatus)
         return res.status(403).json({ success: false, error: 'Bạn cần hoàn thành xác thực danh tính (eKYC) trước khi đăng phòng.' });
       }
     }
 
-    if (!id || !title || price === undefined || !structure || floorArea === undefined) {
+    if (!title || price === undefined || !structure || floorArea === undefined) {
       return res.status(400).json({ success: false, error: 'Missing room required fields.' });
     }
 
@@ -72,6 +75,7 @@ export async function createRoom(req: AuthenticatedRequest, res: Response) {
     };
 
     let room;
+    
     if (id) {
       room = await Room.findByIdAndUpdate(
         id,
@@ -143,7 +147,7 @@ export async function getHostRooms(req: AuthenticatedRequest, res: Response) {
     const { Property } = await import('../models/property');
     const { User } = await import('../models/user');
     const hostProperties = await Property.find({ hostId });
-    const propertyIds = hostProperties.map(p => p._id);
+    const propertyIds = hostProperties.map(p => p._id.toString());
 
     // Also include standalone rooms directly owned by this host (propertyId is null AND hostId matches)
     const rooms = await Room.find({

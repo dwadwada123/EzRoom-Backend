@@ -1,7 +1,6 @@
 import mongoose, { Schema } from 'mongoose';
 
 export interface IMessage {
-  _id: string;
   conversationId: string;
   senderId: string;
   content: string;
@@ -12,7 +11,6 @@ export interface IMessage {
 }
 
 const MessageSchema = new Schema<IMessage>({
-  _id: { type: String, required: true },
   conversationId: { type: String, required: true, index: true },
   senderId: { type: String, required: true },
   content: { type: String, required: true },

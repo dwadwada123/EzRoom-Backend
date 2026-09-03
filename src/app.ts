@@ -1,4 +1,5 @@
 import express from 'express';
+import fs from 'node:fs';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import { connectDb } from './config/db';
@@ -23,6 +24,12 @@ import { processEscrowDisbursals } from './tasks/escrow';
 
 const app = express();
 
+const options = {
+  key: fs.readFileSync('key.pem'),
+  cert: fs.readFileSync('cert.pem')
+};
+
+
 // B-06: CORS – restrict to known origins in production
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173,http://localhost:5174').split(',');
 app.use(cors({
@@ -41,7 +48,7 @@ app.use(express.json());
 
 // B-07: Rate limiting – protect auth endpoints from brute-force
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 1 * 60 * 1000, // 15 minutes
   max: 20, // max 20 login attempts per window per IP
   standardHeaders: true,
   legacyHeaders: false,

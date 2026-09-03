@@ -4,9 +4,14 @@ import { AuthenticatedRequest } from '../middlewares/auth';
 
 export async function createProperty(req: AuthenticatedRequest, res: Response) {
   try {
+    console.log('req.user:', req.user);
     const hostId = req.user!.id;
-    const { id, name, type, address, detailedAddress, description, commonAmenities, latitude, longitude } = req.body;
 
+    console.log(hostId)
+    
+    const { name, type, address, detailedAddress, description, commonAmenities, latitude, longitude } = req.body;
+
+    console.log(hostId);
     if (!name || !type || !address || !detailedAddress) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
@@ -17,6 +22,7 @@ export async function createProperty(req: AuthenticatedRequest, res: Response) {
     const finalLon = longitude !== undefined ? longitude : 108.2022;
 
     let normalizedAmenities: string[] = [];
+
     if (Array.isArray(commonAmenities)) {
       normalizedAmenities = commonAmenities.map((item: any) => {
         if (typeof item === 'string') return item;
@@ -38,24 +44,24 @@ export async function createProperty(req: AuthenticatedRequest, res: Response) {
     };
 
     // Use findByIdAndUpdate with upsert to handle both Create and Edit seamlessly
-    let prop;
-    if (id) {
-      prop = await Property.findByIdAndUpdate(
-        id, 
-        updateData, 
-        { new: true, upsert: true, setDefaultsOnInsert: true }
-      );
-    } else {
-      prop = new Property(updateData);
-      await prop.save();
-    }
+    const prop = new Property(updateData);
 
-    console.log(`[PROPERTY] ✅ Saved property "${name}" (${prop._id}) for host ${hostId}`);
+    await prop.save();
+
+    console.log(`[PROPERTY] ✅ Saved property "${name}" (${prop._id.toString()}) for host ${hostId.toString()}`);
 
     const responseObj = prop.toObject();
     res.status(201).json({ ...responseObj, id: responseObj._id });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating/updating property:', error);
+    if (error.name === 'ValidationError') {
+      const fieldErrors = Object.keys(error.errors).map(key => ({
+        field: key,
+        message: error.errors[key].message
+      }));
+      console.error('❌ Validation errors:', fieldErrors);
+      res.status(400).json({ message: 'Property validation failed', errors: fieldErrors });
+    }
     res.status(500).json({ message: 'Server error' });
   }
 }
@@ -79,6 +85,7 @@ export async function getProperties(req: Request, res: Response) {
 export const getHostProperties = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const hostId = req.user?.id;
+
     if (!hostId) {
       res.status(401).json({ message: 'Unauthorized' });
       return;

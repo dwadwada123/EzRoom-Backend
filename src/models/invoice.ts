@@ -1,7 +1,6 @@
 import mongoose, { Schema } from 'mongoose';
 
 export interface IInvoice {
-  _id: string;
   roomId: string;
   roomName: string;
   period: string; // MM/yyyy
@@ -21,7 +20,6 @@ export interface IInvoice {
 }
 
 const InvoiceSchema = new Schema<IInvoice>({
-  _id: { type: String, required: true },
   roomId: { type: String, required: true },
   roomName: { type: String, required: true },
   period: { type: String, required: true },

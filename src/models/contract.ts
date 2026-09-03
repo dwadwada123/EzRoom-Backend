@@ -1,7 +1,6 @@
 import mongoose, { Schema } from 'mongoose';
 
 export interface IContract {
-  _id: string;
   roomId: string;
   roomName?: string;
   address?: string;
@@ -39,7 +38,6 @@ export interface IContract {
 }
 
 const ContractSchema = new Schema<IContract>({
-  _id: { type: String, required: true },
   roomId: { type: String, required: true },
   roomName: { type: String, default: '' },
   address: { type: String, default: '' },

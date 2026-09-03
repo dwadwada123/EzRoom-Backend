@@ -116,7 +116,7 @@ export async function sendMessage(req: Request, res: Response) {
       'Tin nhắn mới',
       `${senderName}: ${messageSnippet}`,
       'CHAT',
-      conversation._id
+      conversation._id.toString()
     );
 
     return res.status(201).json({ success: true, message });

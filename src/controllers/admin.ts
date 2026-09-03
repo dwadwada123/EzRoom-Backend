@@ -54,11 +54,11 @@ export async function moderateEkyc(req: Request, res: Response) {
       user.ekycStatus = 'VERIFIED';
       
       await sendNotificationHelper(
-        user._id,
+        user._id.toString(),
         'Xác thực danh tính thành công',
         'Hồ sơ eKYC của bạn đã được Admin phê duyệt. Bạn có thể đăng tin và nhận đặt cọc.',
         'SYSTEM',
-        user._id
+        user._id.toString()
       );
     } else if (action === 'REJECT') {
       user.isEkycVerified = false;
@@ -66,11 +66,11 @@ export async function moderateEkyc(req: Request, res: Response) {
       user.ekycRejectReason = note || 'Hồ sơ không hợp lệ';
       
       await sendNotificationHelper(
-        user._id,
+        user._id.toString(),
         'Xác thực danh tính bị từ chối',
         `Lý do: ${user.ekycRejectReason}. Vui lòng kiểm tra lại và nộp lại hồ sơ.`,
         'SYSTEM',
-        user._id
+        user._id.toString()
       );
     } else {
       return res.status(400).json({ success: false, error: 'Invalid action. Must be APPROVE or REJECT.' });
@@ -174,7 +174,7 @@ export async function moderateRoom(req: Request, res: Response) {
       const statusMsg = action === 'APPROVE' 
         ? `Phòng trọ "${room.title}" của bạn đã được phê duyệt và hiển thị công khai.`
         : `Phòng trọ "${room.title}" của bạn đã chuyển sang trạng thái ${action}. Lý do: ${reason || 'Không có'}`;
-      await sendNotificationHelper(room.hostId, statusTitle, statusMsg, 'MODERATION', room._id);
+      await sendNotificationHelper(room.hostId, statusTitle, statusMsg, 'MODERATION', room._id.toString());
     }
 
     return res.status(200).json({ success: true, message: 'Room successfully moderated.', room });
@@ -356,7 +356,7 @@ export async function resolveDispute(req: Request, res: Response) {
             'Kháng cáo phòng được chấp nhận',
             `Kháng cáo cho phòng trọ "${room.title}" đã được Admin phê duyệt. Phòng đã được khôi phục hiển thị công khai.`,
             'MODERATION',
-            room._id
+            room._id.toString()
           );
         }
       } else {
@@ -371,7 +371,7 @@ export async function resolveDispute(req: Request, res: Response) {
             'Kháng cáo phòng bị từ chối',
             `Kháng cáo cho phòng trọ "${room.title}" đã bị từ chối. Quyết định khóa/gỡ phòng giữ nguyên.`,
             'MODERATION',
-            room._id
+            room._id.toString()
           );
         }
       }
@@ -403,15 +403,15 @@ export async function getAdminUsers(req: Request, res: Response) {
     const enrichedUsers = await Promise.all(users.map(async (u) => {
       const obj = u.toObject() as any;
       if (obj.role === 'HOST') {
-        const hostProps = await Property.find({ hostId: obj._id }).select('_id').lean();
-        const propIds = hostProps.map(p => p._id);
+        const hostProps = await Property.find({ hostId: obj._id.toString() }).select('_id').lean();
+        const propIds = hostProps.map(p => p._id.toString());
         const removedRoomsCount = await Room.countDocuments({
           $and: [
             { status: 'REMOVED' },
             {
               $or: [
                 { propertyId: { $in: propIds } },
-                { hostId: obj._id }
+                { hostId: obj._id.toString() }
               ]
             }
           ]
