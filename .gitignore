@@ -16,7 +16,7 @@ build/
 !.env
 .env.*
 !.env.example
-*.pem
+!*.pem
 *.key
 *.cert
 
