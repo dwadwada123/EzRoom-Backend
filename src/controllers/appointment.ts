@@ -3,12 +3,13 @@ import { Appointment } from '../models/appointment';
 import { Room } from '../models/room';
 import { User } from '../models/user';
 import { sendNotificationHelper } from './notification';
+import mongoose,  { Schema, Types } from 'mongoose';
 
 export async function createAppointment(req: Request, res: Response) {
   try {
-    let { id, _id, roomId, roomName, renterId, renterName, renterPhone, hostId, hostName, date, time, note, status } = req.body;
-    id = id || _id;
-    if (!id || !roomId || !roomName || !renterName || !renterPhone || !hostName || !date || !time) {
+    let { roomId, renterId, hostId, date, time, note, status } = req.body;
+
+    if (!roomId || !renterId|| !date || !time) {
       return res.status(400).json({ success: false, error: 'Missing required appointment fields' });
     }
 
@@ -16,37 +17,34 @@ export async function createAppointment(req: Request, res: Response) {
     if (room && room.hostId) {
       hostId = room.hostId;
     }
-
-    if (!renterId) {
-      const renterUser = await User.findOne({ phone: renterPhone.trim() });
-      if (renterUser) {
-        renterId = renterUser._id;
-      }
-    }
+    const renter = await User.findById(renterId);
+    const host = await User.findById(hostId);
 
     const appointment = new Appointment({
-      _id: id,
+      _id: new Types.ObjectId(),
       roomId,
-      roomName,
-      renterId: renterId || '',
-      renterName,
-      renterPhone,
-      hostId: hostId || '',
-      hostName,
+      roomName: room?.title,
+      renterId,
+      renterName: renter?.name,
+      renterPhone: renter?.phone,
+      hostId,
+      hostName: host?.name,
       date,
       time,
       note: note || '',
       status: status || 'PENDING'
     });
+
     await appointment.save();
 
     // Trigger Notification to Host
     const targetHostId = hostId || (room ? room.hostId : null);
+
     if (targetHostId) {
       await sendNotificationHelper(
         targetHostId,
         'Lịch hẹn xem phòng mới',
-        `${renterName} vừa đặt lịch hẹn xem phòng "${roomName}" vào ${time} ngày ${date}.`,
+        `${appointment.renterName} vừa đặt lịch hẹn xem phòng "${appointment.roomName}" vào ${time} ngày ${date}.`,
         'APPOINTMENT',
         appointment._id.toString()
       );
@@ -115,15 +113,16 @@ export async function updateAppointmentStatus(req: Request, res: Response) {
 
     // Find renter user to send notification
     let targetRenterId = appointment.renterId;
+    
     if (!targetRenterId) {
       const renter = await User.findOne({ $or: [{ phone: appointment.renterPhone }, { name: appointment.renterName }] });
-      if (renter) targetRenterId = renter._id.toString();
+      if (renter) targetRenterId = renter._id as any;
     }
 
     if (targetRenterId) {
       const statusText = status === 'APPROVED' ? 'đã được ĐỒNG Ý' : status === 'CANCELED' ? 'đã bị TỪ CHỐI/HỦY' : 'đã được cập nhật';
       await sendNotificationHelper(
-        targetRenterId,
+        targetRenterId.toString(),
         'Trạng thái lịch hẹn',
         `Lịch hẹn xem phòng "${appointment.roomName}" ${statusText}.`,
         'APPOINTMENT',
