@@ -22,6 +22,7 @@ if (smtpUser && smtpPass) {
 
 export async function sendOtpEmail(to: string, otp: string) {
   const subject = '[EzRoom] Mã xác nhận đặt lại mật khẩu';
+
   const html = `
     <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
       <h2 style="color: #0066cc;">EzRoom - Khôi Phục Mật Khẩu</h2>
