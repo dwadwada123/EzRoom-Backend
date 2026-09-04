@@ -144,7 +144,7 @@ export async function getHostRooms(req: AuthenticatedRequest, res: Response) {
     // Get all rooms linked to properties owned by this host
     const { Property } = await import('../models/property');
     const { User } = await import('../models/user');
-    const hostProperties = await Property.find({ hostId });
+    const hostProperties = await Property.find({ hostId, isDeleted: { $ne: true } });
     const propertyIds = hostProperties.map(p => p._id.toString());
 
     // Also include standalone rooms directly owned by this host (propertyId is null AND hostId matches)
