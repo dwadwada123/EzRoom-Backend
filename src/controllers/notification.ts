@@ -14,6 +14,7 @@ function normalizePhone(p: string): string {
 export async function getNotifications(req: Request, res: Response) {
   try {
     const userId = (req.query.userId as string) || (req as any).user?.id || (req as any).user?._id;
+    console.log(userId);
     if (!userId) {
       return res.status(400).json({ success: false, error: 'User ID is required' });
     }
@@ -115,7 +116,7 @@ export async function sendNotificationHelper(userId: string, title: string, cont
     }
 
     const notif = new Notification({
-      _id: Date.now().toString() + Math.random().toString(36).substring(2, 8),
+      _id: Date.now().toString() + Math.random().toString(16).substring(2, 13),
       userId,
       title,
       content,

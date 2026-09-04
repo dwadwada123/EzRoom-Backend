@@ -1,12 +1,12 @@
 import mongoose, { Schema } from 'mongoose';
 
 export interface IAppointment {
-  roomId: string;
+  roomId: Schema.Types.ObjectId;
   roomName: string;
-  renterId?: string;
+  renterId: Schema.Types.ObjectId;
   renterName: string;
   renterPhone: string;
-  hostId?: string;
+  hostId:  Schema.Types.ObjectId;
   hostName: string;
   date: string;
   time: string;
@@ -15,12 +15,23 @@ export interface IAppointment {
 }
 
 const AppointmentSchema = new Schema<IAppointment>({
-  roomId: { type: String, required: true },
+  roomId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Room',
+    required: true
+  },
   roomName: { type: String, required: true },
-  renterId: { type: String, default: '' },
+  renterId: { 
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
   renterName: { type: String, required: true },
   renterPhone: { type: String, required: true },
-  hostId: { type: String, default: '' },
+  hostId: {  
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: true},
   hostName: { type: String, required: true },
   date: { type: String, required: true },
   time: { type: String, required: true },
