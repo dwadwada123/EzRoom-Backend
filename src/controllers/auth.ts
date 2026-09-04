@@ -192,6 +192,7 @@ export async function adminLogin(req: Request, res: Response) {
 }
 
 import { AuthenticatedRequest } from '../middlewares/auth';
+import mongoose from 'mongoose';
 
 export async function getProfile(req: AuthenticatedRequest, res: Response) {
   try {
@@ -264,30 +265,27 @@ export async function changePassword(req: AuthenticatedRequest, res: Response) {
 export async function forgotPassword(req: Request, res: Response) {
   try {
     const { email } = req.body;
+
     if (!email) {
       return res.status(400).json({ success: false, error: 'Email là bắt buộc.' });
     }
 
     const user = await User.findOne({ email });
+
     if (!user) {
       return res.status(404).json({ success: false, error: 'Email không tồn tại trong hệ thống.' });
     }
 
-    // Production-Grade: Generate cryptographically secure 6-digit random OTP
     const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // Invalidate existing OTPs for this email
     await Otp.deleteMany({ email });
 
-    // Store new OTP in MongoDB with 5-minute auto-expiry (TTL index)
-    const otpEntry = new Otp({
-      _id: Date.now().toString() + '_' + Math.random().toString(36).substring(2, 7),
+    await Otp.create({
+      _id: new mongoose.Types.ObjectId(Date.now().toString() + Math.random().toString(16).substring(2, 13)),
       email,
       otp: generatedOtp
-    });
-    await otpEntry.save();
-
-    // Send real OTP email to user (or log to server console in dev)
+    })
+    
     await sendOtpEmail(email, generatedOtp);
 
     return res.status(200).json({
