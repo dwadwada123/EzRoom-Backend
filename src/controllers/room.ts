@@ -17,8 +17,6 @@ export async function createRoom(req: AuthenticatedRequest, res: Response) {
       const { User } = await import('../models/user');
       const hostUser = await User.findById(hostId);
       if (!hostUser || hostUser.ekycStatus !== 'VERIFIED') {
-        console.log(hostUser)
-        console.log(hostUser?.ekycStatus)
         return res.status(403).json({ success: false, error: 'Bạn cần hoàn thành xác thực danh tính (eKYC) trước khi đăng phòng.' });
       }
     }

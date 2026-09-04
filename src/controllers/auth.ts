@@ -335,10 +335,17 @@ export async function resetPassword(req: Request, res: Response) {
 export async function checkPhone(req: Request, res: Response) {
   try {
     const phone = req.params.phone as string;
+
+    console.log(phone);
+
     if (!phone) {
       return res.status(400).json({ success: false, error: 'Phone number is required' });
     }
+
     const user = await User.findOne({ phone: phone.trim() });
+
+    console.log(user);
+
     if (user) {
       return res.status(200).json({
         success: true,
