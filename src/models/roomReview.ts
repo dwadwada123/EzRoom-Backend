@@ -15,7 +15,7 @@ const RoomReviewSchema: Schema = new Schema({
   roomId: { type: String, required: true },
   reviewerId: { type: String, required: true },
   rating: { type: Number, required: true, min: 1, max: 5 },
-  comment: { type: String, required: true },
+  comment: { type: String, default: '' },
   isReported: { type: Boolean, default: false },
   reportReason: { type: String, default: '' },
   isDeleted: { type: Boolean, default: false },
