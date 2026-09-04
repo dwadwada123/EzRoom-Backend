@@ -4,14 +4,10 @@ import { AuthenticatedRequest } from '../middlewares/auth';
 
 export async function createProperty(req: AuthenticatedRequest, res: Response) {
   try {
-    console.log('req.user:', req.user);
     const hostId = req.user!.id;
-
-    console.log(hostId)
     
     const { name, type, address, detailedAddress, description, commonAmenities, latitude, longitude } = req.body;
 
-    console.log(hostId);
     if (!name || !type || !address || !detailedAddress) {
       return res.status(400).json({ message: 'Missing required fields' });
     }

@@ -35,24 +35,9 @@ async function resolveContractRoomTitle(roomId: string, fallbackName?: string): 
 
 export async function createContract(req: Request, res: Response) {
   try {
-    let { id, roomId, renterId, renterName, renterPhone, hostName, startDate, endDate, depositAmount, depositStatus, status, isProtected } = req.body;
+    let { roomId, renterId, renterPhone, hostId, startDate, endDate, depositAmount, depositStatus, status, isProtected } = req.body;
 
-    if (!hostName) {
-      const authUser = (req as any).user;
-      if (authUser && authUser.name) {
-        hostName = authUser.name;
-      } else {
-        const room = await Room.findById(roomId);
-        if (room && room.hostId) {
-          const hostUser = await User.findById(room.hostId);
-          hostName = hostUser ? hostUser.name : 'Chủ nhà';
-        } else {
-          hostName = 'Chủ nhà';
-        }
-      }
-    }
-
-    if (!id || !roomId || !renterName || !renterPhone || !startDate || !endDate || depositAmount === undefined) {
+    if ( !roomId || !startDate || !endDate || depositAmount === undefined) {
       return res.status(400).json({ success: false, error: 'Missing contract required parameters.' });
     }
 
@@ -66,6 +51,9 @@ export async function createContract(req: Request, res: Response) {
       renterId = 'user_' + normPhone;
     }
 
+    const host = await User.findById(hostId);
+    const renter = await User.findById(renterId);
+
     const room = await Room.findById(roomId);
     const roomTitle = await resolveContractRoomTitle(roomId, room ? room.title : 'Phòng trọ');
     const roomAddress = room ? room.address : '';
@@ -74,8 +62,18 @@ export async function createContract(req: Request, res: Response) {
     const initialDepositStatus = (numDeposit === 0 || depositStatus === 'FROZEN' || depositStatus === 'PAID') ? 'FROZEN' : (depositStatus || 'UNPAID');
     const initialStatus = status || 'WAITING_SIGN';
 
+console.log("Truowsc");
+
     const contract = new Contract({
-      _id: id, roomId, roomName: roomTitle, address: roomAddress, renterId, renterName, renterPhone, hostName, startDate, endDate,
+      roomId, 
+      roomName: roomTitle, 
+      address: roomAddress, 
+      renterId, 
+      renterName: renter?.name, 
+      renterPhone, 
+      hostName: host?.name, 
+      startDate, 
+      endDate,
       depositAmount: numDeposit,
       depositStatus: initialDepositStatus,
       status: initialStatus,
@@ -83,7 +81,14 @@ export async function createContract(req: Request, res: Response) {
       disburseDate: startDate,
       isProtected
     });
-    await contract.save();
+
+    console.log("sau");
+
+    console.log(contract);
+
+    const tt = await contract.save();
+
+    console.log(tt, "after save")
 
     if (initialStatus === 'ACTIVE' || initialDepositStatus === 'FROZEN') {
       await Room.findByIdAndUpdate(roomId, { status: 'RENTED' });
@@ -91,14 +96,16 @@ export async function createContract(req: Request, res: Response) {
 
     // Trigger Notification to Renter (Send ONLY 1 notification)
     const notifTitle = 'Hợp đồng thuê phòng mới';
-    const notifMsg = `Chủ nhà ${hostName} đã gửi hợp đồng thuê "${roomTitle}". Vui lòng kiểm tra và ký xác nhận.`;
+    const notifMsg = `Chủ nhà ${host?.name} đã gửi hợp đồng thuê "${roomTitle}". Vui lòng kiểm tra và ký xác nhận.`;
+
+console.log("log 1")
 
     if (user) {
       await sendNotificationHelper(user._id.toString(), notifTitle, notifMsg, 'CONTRACT', contract._id.toString());
     } else {
       await sendNotificationHelper(renterPhone.trim(), notifTitle, notifMsg, 'CONTRACT', contract._id.toString());
     }
-
+console.log("log 1")
     return res.status(201).json({ success: true, contract });
   } catch (error: any) {
     return res.status(500).json({ success: false, error: error.message });
@@ -203,6 +210,7 @@ export async function getPaymentQR(req: Request, res: Response) {
 }
 
 import { checkAndAutoDisburseContracts } from '../services/cronService';
+import { Types } from 'mongoose';
 
 async function getHostUserId(roomId: string, hostName?: string): Promise<string | null> {
   if (roomId) {
