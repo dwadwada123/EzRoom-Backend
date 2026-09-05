@@ -1,7 +1,14 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import dns from 'node:dns';
 
 dotenv.config();
+
+try {
+  dns.setServers(['8.8.8.8', '8.8.4.4']);
+} catch (e) {
+  console.warn('Could not set custom DNS servers:', e);
+}
 
 const url = process.env.MONGODB_URI || 'mongodb://localhost:27017/vietnam_provinces';
 const configuredDatabaseName = process.env.MONGODB_DB_NAME || (() => {

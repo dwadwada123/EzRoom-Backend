@@ -11,16 +11,21 @@ import mongoose from 'mongoose';
 export async function createInvoice(req: Request, res: Response) {
   try {
     const { id, roomId, roomName, period, roomPrice, oldElectricity, newElectricity, oldWater, newWater, otherCosts } = req.body;
-    if (!id || !roomId || !roomName || !period || roomPrice === undefined || oldElectricity === undefined || newElectricity === undefined || oldWater === undefined || newWater === undefined) {
+    if (!roomId || !roomName || !period || roomPrice === undefined || oldElectricity === undefined || newElectricity === undefined || oldWater === undefined || newWater === undefined) {
       return res.status(400).json({ success: false, error: 'Missing invoice parameters.' });
     }
 
-    const invoice = new Invoice({
-      _id: id, roomId, roomName, period, roomPrice, oldElectricity, newElectricity, oldWater, newWater, otherCosts,
+    const invoiceData: any = {
+      roomId, roomName, period, roomPrice, oldElectricity, newElectricity, oldWater, newWater, otherCosts,
       status: 'UNPAID', type: 'RENT', dateCreated: new Date().toLocaleDateString('vi-VN')
-    });
+    };
+    if (id && mongoose.Types.ObjectId.isValid(id)) {
+      invoiceData._id = id;
+    }
+
+    const invoice = new Invoice(invoiceData);
     await invoice.save();
-    console.log(`[INVOICE] 🧾 Created invoice ${id} for room "${roomName}" (${roomId})`);
+    console.log(`[INVOICE] 🧾 Created invoice ${invoice._id} for room "${roomName}" (${roomId})`);
 
     // Trigger Notification to Renter of this Room
     const activeContract = await Contract.findOne({

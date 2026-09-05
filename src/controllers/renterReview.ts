@@ -1,15 +1,15 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import { RenterReview } from '../models/renterReview';
 import { User } from '../models/user';
 
 async function updateRenterCreditScore(renterIdentifier: string) {
   try {
-    const user = await User.findOne({
-      $or: [
-        { _id: renterIdentifier },
-        { phone: renterIdentifier }
-      ]
-    });
+    const conditions: any[] = [{ phone: renterIdentifier }];
+    if (mongoose.Types.ObjectId.isValid(renterIdentifier)) {
+      conditions.push({ _id: renterIdentifier });
+    }
+    const user = await User.findOne({ $or: conditions });
 
     const filterIds = [renterIdentifier];
     if (user) {
@@ -38,32 +38,36 @@ export async function createReview(req: Request, res: Response) {
   try {
     console.log('[RENTER REVIEW POST BODY]:', req.body);
     const { id, _id, renterId, hostName, rating, tags, comment, date } = req.body;
-    const reviewId = id || _id;
     const finalComment = comment !== undefined ? comment : '';
     const finalDate = date || new Date().toLocaleDateString('vi-VN');
 
-    if (!reviewId || !renterId || !hostName || rating === undefined) {
-      return res.status(400).json({ success: false, error: 'Missing required review fields (reviewId, renterId, hostName, rating)' });
+    if (!renterId || !hostName || rating === undefined) {
+      return res.status(400).json({ success: false, error: 'Missing required review fields (renterId, hostName, rating)' });
     }
 
-    // Save review
-    const review = new RenterReview({ 
-      _id: reviewId, 
-      renterId, 
-      hostName, 
-      rating, 
-      tags: tags || [], 
-      comment: finalComment, 
+    const reviewData: any = {
+      renterId,
+      hostName,
+      rating,
+      tags: tags || [],
+      comment: finalComment,
       date: finalDate,
       isDeleted: false
-    });
+    };
+
+    const reviewId = id || _id;
+    if (reviewId && mongoose.Types.ObjectId.isValid(reviewId)) {
+      reviewData._id = reviewId;
+    }
+
+    const review = new RenterReview(reviewData);
     await review.save();
 
     await updateRenterCreditScore(renterId);
 
     const formatted = {
-      id: review._id,
-      _id: review._id,
+      id: review._id.toString(),
+      _id: review._id.toString(),
       renterId: review.renterId,
       hostName: review.hostName,
       rating: review.rating,
@@ -81,17 +85,16 @@ export async function createReview(req: Request, res: Response) {
 
 export async function getRenterReviews(req: Request, res: Response) {
   try {
-    const { renterId } = req.params;
+    const renterId = String(req.params.renterId || '');
     if (!renterId) {
       return res.status(400).json({ success: false, error: 'Renter ID is required' });
     }
 
-    const user = await User.findOne({
-      $or: [
-        { _id: renterId },
-        { phone: renterId }
-      ]
-    });
+    const conditions: any[] = [{ phone: renterId }];
+    if (mongoose.Types.ObjectId.isValid(renterId)) {
+      conditions.push({ _id: renterId });
+    }
+    const user = await User.findOne({ $or: conditions });
 
     const filterIds = [renterId];
     if (user) {
@@ -99,10 +102,10 @@ export async function getRenterReviews(req: Request, res: Response) {
       filterIds.push(user.phone);
     }
 
-    const reviews = await RenterReview.find({ renterId: { $in: filterIds }, isDeleted: { $ne: true } }).sort({ date: -1 });
+    const reviews = await RenterReview.find({ renterId: { $in: filterIds }, isDeleted: { $ne: true } }).sort({ _id: -1 });
     const formatted = reviews.map(r => ({
-      id: r._id,
-      _id: r._id,
+      id: r._id.toString(),
+      _id: r._id.toString(),
       renterId: r.renterId,
       hostName: r.hostName,
       rating: r.rating,
@@ -119,8 +122,12 @@ export async function getRenterReviews(req: Request, res: Response) {
 
 export async function updateReview(req: Request, res: Response) {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id || '');
     const { rating, tags, comment, date } = req.body;
+
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, error: 'Invalid review ID' });
+    }
 
     const review = await RenterReview.findById(id);
     if (!review || review.isDeleted) {
@@ -136,8 +143,8 @@ export async function updateReview(req: Request, res: Response) {
     await updateRenterCreditScore(review.renterId);
 
     const formatted = {
-      id: review._id,
-      _id: review._id,
+      id: review._id.toString(),
+      _id: review._id.toString(),
       renterId: review.renterId,
       hostName: review.hostName,
       rating: review.rating,
@@ -154,7 +161,11 @@ export async function updateReview(req: Request, res: Response) {
 
 export async function deleteReview(req: Request, res: Response) {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id || '');
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, error: 'Invalid review ID' });
+    }
+
     const review = await RenterReview.findById(id);
     if (!review) {
       return res.status(404).json({ success: false, error: 'Review not found' });
@@ -174,8 +185,12 @@ export async function deleteReview(req: Request, res: Response) {
 
 export async function reportRenterReview(req: Request, res: Response) {
   try {
-    const { id } = req.params;
+    const id = String(req.params.id || '');
     const { reason, proofImages, reporterName, reporterId } = req.body;
+
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, error: 'Invalid review ID' });
+    }
 
     const review = await RenterReview.findById(id);
     if (!review || review.isDeleted) {

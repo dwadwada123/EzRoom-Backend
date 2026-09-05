@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import { RoomReview } from '../models/roomReview';
 import { Room } from '../models/room';
 import { User } from '../models/user';
@@ -9,33 +10,38 @@ export async function createRoomReview(req: Request, res: Response) {
     const { roomId, rating, comment } = req.body;
     const reviewerId = (req as any).user?.id || req.body.reviewerId;
 
-    if (!roomId || !reviewerId || !rating || !comment) {
+    if (!roomId || !reviewerId || rating === undefined) {
       return res.status(400).json({ success: false, error: 'Missing required fields' });
     }
 
+    const finalComment = comment !== undefined ? String(comment) : '';
+
     const review = new RoomReview({
-      roomId,
-      reviewerId,
-      rating,
-      comment,
+      roomId: String(roomId),
+      reviewerId: String(reviewerId),
+      rating: Number(rating),
+      comment: finalComment,
       createdAt: new Date()
     });
 
     await review.save();
 
-    const roomReviews = await RoomReview.find({ roomId, isDeleted: { $ne: true } });
+    const roomReviews = await RoomReview.find({ roomId: String(roomId), isDeleted: { $ne: true } });
     const roomAvgRating = roomReviews.reduce((acc, r) => acc + r.rating, 0) / roomReviews.length;
-    const room = await Room.findByIdAndUpdate(roomId, { rating: roomAvgRating, reviewCount: roomReviews.length }, { new: true });
+    
+    if (mongoose.Types.ObjectId.isValid(String(roomId))) {
+      const room = await Room.findByIdAndUpdate(roomId, { rating: roomAvgRating, reviewCount: roomReviews.length }, { new: true });
 
-    if (room && room.propertyId) {
-      const propertyRooms = await Room.find({ propertyId: room.propertyId });
-      const propertyRoomIds = propertyRooms.map(r => r._id.toString());
-      const allPropertyReviews = await RoomReview.find({ roomId: { $in: propertyRoomIds }, isDeleted: { $ne: true } });
-      if (allPropertyReviews.length > 0) {
-        const propAvgRating = allPropertyReviews.reduce((acc, r) => acc + r.rating, 0) / allPropertyReviews.length;
-        await import('../models/property').then(m => {
-          return m.Property.findByIdAndUpdate(room.propertyId, { rating: propAvgRating, reviewCount: allPropertyReviews.length });
-        });
+      if (room && room.propertyId && mongoose.Types.ObjectId.isValid(room.propertyId)) {
+        const propertyRooms = await Room.find({ propertyId: room.propertyId });
+        const propertyRoomIds = propertyRooms.map(r => r._id.toString());
+        const allPropertyReviews = await RoomReview.find({ roomId: { $in: propertyRoomIds }, isDeleted: { $ne: true } });
+        if (allPropertyReviews.length > 0) {
+          const propAvgRating = allPropertyReviews.reduce((acc, r) => acc + r.rating, 0) / allPropertyReviews.length;
+          await import('../models/property').then(m => {
+            return m.Property.findByIdAndUpdate(room.propertyId, { rating: propAvgRating, reviewCount: allPropertyReviews.length });
+          });
+        }
       }
     }
 
@@ -47,7 +53,7 @@ export async function createRoomReview(req: Request, res: Response) {
 
 export async function getRoomReviews(req: Request, res: Response) {
   try {
-    const { roomId } = req.params;
+    const roomId = String(req.params.roomId || '');
     
     if (!roomId) {
       return res.status(400).json({ success: false, error: 'Room ID is required' });
@@ -57,7 +63,7 @@ export async function getRoomReviews(req: Request, res: Response) {
 
     const enrichedReviews = [];
     for (const review of reviews) {
-      const user = await User.findById(review.reviewerId);
+      const user = mongoose.Types.ObjectId.isValid(review.reviewerId) ? await User.findById(review.reviewerId) : null;
       enrichedReviews.push({
         id: review._id.toString(),
         reviewerName: user ? user.name : 'Người dùng',
